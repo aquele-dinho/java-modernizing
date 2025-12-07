@@ -127,6 +127,43 @@
                 </configuration>
             </plugin>
             
+            <!-- OWASP Dependency-Check Maven Plugin for SCA (Software Composition Analysis) -->
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>11.0.0</version>
+                <configuration>
+                    <!-- NVD API Key for efficient scanning (highly recommended) -->
+                    <!-- Obtain key from: https://nvd.nist.gov/developers/request-an-api-key -->
+                    <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+                    
+                    <!-- Fail build on CVSS score >= 7 (High/Critical vulnerabilities) -->
+                    <failBuildOnCVSS>7</failBuildOnCVSS>
+                    
+                    <!-- Include transitive dependencies (critical for detecting inherited risks) -->
+                    <skipTestScope>false</skipTestScope>
+                    
+                    <!-- False positive suppression file -->
+                    <suppressionFile>dependency-suppression.xml</suppressionFile>
+                    
+                    <!-- Report formats -->
+                    <formats>
+                        <format>HTML</format>
+                        <format>JSON</format>
+                    </formats>
+                    
+                    <!-- Output directory -->
+                    <outputDirectory>${project.build.directory}</outputDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            
             <!-- OpenRewrite Maven Plugin for automated migration -->
             <plugin>
                 <groupId>org.openrewrite.maven</groupId>
@@ -134,9 +171,23 @@
                 <version>5.42.0</version>
                 <configuration>
                     <activeRecipes>
-                        <!-- Will be used in Phase 1 migration -->
+                        <!-- Phase 1: Migration recipes -->
                         <recipe>org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0</recipe>
+                        
+                        <!-- Security: Automated vulnerability patching -->
+                        <recipe>org.openrewrite.java.dependencies.DependencyVulnerabilityCheck</recipe>
+                        
+                        <!-- Security: XSS detection for refactored code -->
+                        <recipe>org.openrewrite.analysis.java.security.FindXssVulnerability</recipe>
                     </activeRecipes>
+                    
+                    <!-- Recipe configuration -->
+                    <recipeConfig>
+                        <org.openrewrite.java.dependencies.DependencyVulnerabilityCheck>
+                            <!-- Safe default: only patch upgrades, flag minor/major for review -->
+                            <maximumUpgradeDelta>PATCH</maximumUpgradeDelta>
+                        </org.openrewrite.java.dependencies.DependencyVulnerabilityCheck>
+                    </recipeConfig>
                 </configuration>
                 <dependencies>
                     <dependency>
@@ -148,6 +199,11 @@
                         <groupId>org.openrewrite.recipe</groupId>
                         <artifactId>rewrite-migrate-java</artifactId>
                         <version>2.26.0</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.openrewrite.recipe</groupId>
+                        <artifactId>rewrite-java-dependencies</artifactId>
+                        <version>1.21.0</version>
                     </dependency>
                 </dependencies>
             </plugin>

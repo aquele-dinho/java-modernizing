@@ -1,6 +1,6 @@
 # Java Modernization Demo - Phase 0 (Baseline)
 
-A demonstration application showcasing the migration path from Java 11 + Spring Boot 2.4 to Java 21 + Spring Boot 3.x using OpenRewrite automation.
+A demonstration application showcasing the migration path from Java 11 + Spring Boot 2.4 to Java 21 + Spring Boot 3.x using OpenRewrite automation with integrated OWASP dependency vulnerability checking (SCA).
 
 ## 📋 Project Overview
 
@@ -30,6 +30,7 @@ This project serves as a **baseline implementation** for demonstrating Java and 
 - **Java 11** - LTS version required for baseline
 - **Maven 3.8+** - Build tool
 - **Git** - Version control
+- **NVD API Key** (Optional but recommended) - For efficient OWASP Dependency-Check scanning
 
 ### Setting Up Java 11
 
@@ -45,6 +46,19 @@ java -version
 ```
 
 Add this to your `~/.zshrc` or `~/.bashrc` to make it persistent for this project.
+
+### Setting Up NVD API Key (Recommended)
+
+For efficient vulnerability scanning with OWASP Dependency-Check:
+
+1. **Obtain API Key:** Visit https://nvd.nist.gov/developers/request-an-api-key
+2. **Set Environment Variable:**
+   ```bash
+   export NVD_API_KEY="your-api-key-here"
+   ```
+3. **Make it persistent:** Add to your `~/.zshrc` or `~/.bashrc`
+
+Without an API key, vulnerability scans will be significantly slower.
 
 ## 🚀 Quick Start
 
@@ -218,21 +232,84 @@ mvn test
 mvn clean test jacoco:report
 ```
 
-## 🔄 Migration Path
+## 🔒 Security Scanning (OWASP Dependency-Check)
+
+This project integrates OWASP Dependency-Check for Software Composition Analysis (SCA) to detect vulnerable dependencies.
+
+### Run Vulnerability Scan
+
+```bash
+# Run dependency vulnerability check
+mvn dependency-check:check
+
+# View the report
+open target/dependency-check-report.html
+```
+
+### Baseline Security Assessment
+
+Before starting migration, establish a security baseline:
+
+```bash
+# 1. Run initial vulnerability scan
+mvn clean dependency-check:check
+
+# 2. Review the HTML report
+open target/dependency-check-report.html
+
+# 3. Document baseline CVE count
+# Note: Critical and High severity CVEs should be tracked
+
+# 4. Create suppression file for false positives
+# Edit dependency-suppression.xml to suppress known false positives
+```
+
+### Security Validation During Migration
+
+After each migration phase, run the security check to ensure no new critical vulnerabilities were introduced:
+
+```bash
+# After Phase 1 (Spring Boot 3.0 + Java 17)
+mvn dependency-check:check
+
+# Build will FAIL if CVSS >= 7.0 (High/Critical)
+# This is a GATED CHECK to prevent vulnerable code from being deployed
+```
+
+### Generate Compliance Artifacts
+
+```bash
+# Generate SBOM (Software Bill of Materials)
+mvn cyclonedx:makeAggregateBom
+
+# Generate comprehensive vulnerability report (JSON format)
+mvn dependency-check:check -Dformat=JSON,HTML
+```
+
+**Note:** The `dependency-suppression.xml` file contains documented suppressions for known false positives. Review and update this file after each migration phase.
+
+## 🔄 Migration Path with Security Validation
 
 ### Phase 1: Spring Boot 3.0 + Java 17
 
-Use OpenRewrite to automate the migration:
+Use OpenRewrite to automate the migration with integrated security checks:
 
 ```bash
-# Preview changes (dry-run)
+# 1. Preview changes (dry-run)
 mvn rewrite:dryRun
 
-# Apply migration
+# 2. Apply migration with security remediation
 mvn rewrite:run
 
-# Update Java version
+# 3. Update Java version
 export JAVA_HOME=$(/usr/libexec/java_home -v 17)
+
+# 4. CRITICAL: Run security scan after upgrade (Gated Check)
+mvn clean install dependency-check:check
+# Build will FAIL if critical CVEs are introduced
+
+# 5. Review security report
+open target/dependency-check-report.html
 ```
 
 **Key Changes:**
@@ -240,15 +317,27 @@ export JAVA_HOME=$(/usr/libexec/java_home -v 17)
 - Spring Security method chaining → Lambda DSL
 - Apache HttpClient 4.x → 5.x
 - WebSecurityConfigurerAdapter → SecurityFilterChain
+- **Automated CVE patching** via OpenRewrite `DependencyVulnerabilityCheck`
+- **XSS vulnerability detection** via OpenRewrite `FindXssVulnerability`
 
 ### Phase 2: Java 21 Optimization
 
 ```bash
-# Set Java 21
+# 1. Set Java 21
 export JAVA_HOME=$(/usr/libexec/java_home -v 21)
 
-# Apply Java 21 migration recipe
+# 2. Apply Java 21 migration recipe
 mvn rewrite:run -Drewrite.activeRecipes=org.openrewrite.java.migrate.UpgradeToJava21
+
+# 3. Final security validation (Zero-tolerance scan)
+mvn clean install dependency-check:check
+
+# 4. Audit and clean suppression file
+# Review dependency-suppression.xml and remove obsolete entries
+
+# 5. Generate final compliance artifacts
+mvn cyclonedx:makeAggregateBom
+mvn dependency-check:check -Dformat=JSON,HTML
 ```
 
 ## 📦 Project Structure
@@ -269,8 +358,12 @@ java-modernizing/
 │   └── data.sql                # Sample data
 ├── src/test/java/       # Unit and integration tests
 ├── docs/
-│   └── RESEARCH.md      # Comprehensive migration research
-├── pom.xml              # Maven configuration with OpenRewrite
+│   ├── RESEARCH.md      # Comprehensive migration research
+│   └── OWASP.md         # OWASP SCA methodology and integration
+├── target/
+│   └── dependency-check-report.html  # Vulnerability scan report
+├── pom.xml              # Maven with OpenRewrite + OWASP plugins
+├── dependency-suppression.xml        # False positive suppressions
 ├── WARP.md              # Technical specification
 └── README.md            # This file
 ```
@@ -290,14 +383,19 @@ These patterns are **documented as migration targets** in the codebase.
 ## 📚 Additional Resources
 
 - **Migration Research:** See `docs/RESEARCH.md` for comprehensive analysis
+- **OWASP SCA Strategy:** See `docs/OWASP.md` for security methodology
 - **Technical Spec:** See `WARP.md` for detailed specifications
 - **OpenRewrite Docs:** https://docs.openrewrite.org
+- **OWASP Dependency-Check:** https://owasp.org/www-project-dependency-check/
+- **OWASP Dep-Scan:** https://owasp.org/www-project-dep-scan/
 
-## 🐛 Known Issues
+## 🐛 Known Issues & Security Warnings
 
 - ⚠️ TrustAllStrategy in RestClientConfig is **insecure** and for demonstration only
 - ⚠️ H2 console should be **disabled in production**
 - ⚠️ JWT secret should be **externalized** and secured in production
+- ⚠️ **Baseline may contain known CVEs** - This is intentional to demonstrate security improvement through modernization
+- ⚠️ Without NVD API Key, dependency scans will be **extremely slow** (can take 30+ minutes)
 
 ## 📝 License
 
@@ -307,9 +405,20 @@ This is a demonstration project for educational purposes.
 
 This project follows the Specification-Driven Development (SDD) methodology. See `WARP.md` for implementation guidelines.
 
+## 🎯 Success Criteria
+
+The migration is considered successful when:
+
+✅ All tests pass (zero regressions)  
+✅ **Security:** Zero critical CVEs introduced (vulnerability count ≤ baseline)  
+✅ **Compliance:** SBOM, VDR, and VEX artifacts generated  
+✅ Application functionality maintained  
+✅ Performance metrics meet or exceed baseline  
+
 ---
 
-**Version:** 1.0.0-SNAPSHOT (Phase 0 - Baseline)  
+**Version:** 2.0.0-SNAPSHOT (Phase 0 - Baseline with OWASP Integration)  
 **Java:** 11  
 **Spring Boot:** 2.4.13  
-**Status:** ✅ Ready for Migration
+**Security:** OWASP Dependency-Check + OpenRewrite Security Recipes  
+**Status:** ✅ Ready for Security-First Migration

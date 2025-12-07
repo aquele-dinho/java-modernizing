@@ -9,6 +9,7 @@ This project serves as a **demonstration and reference implementation** for the 
 - Create a realistic Spring Boot 2.4 application running on Java 11 that exhibits common patterns and dependencies found in legacy enterprise applications
 - Demonstrate the phased migration approach using OpenRewrite automation
 - Illustrate breaking changes at each migration phase (Java 11→17, Spring Boot 2.x→3.x, Java 17→21)
+- **Integrate OWASP dependency vulnerability checking (SCA) throughout the migration lifecycle**
 - Provide before/after code examples for critical refactoring areas
 - Document manual intervention points that cannot be automated
 - Serve as a training resource and blueprint for real-world modernization projects
@@ -17,9 +18,11 @@ This project serves as a **demonstration and reference implementation** for the 
 This demonstration application will enable development teams to:
 - Understand the scope and complexity of Java/Spring Boot modernization
 - Evaluate OpenRewrite's capabilities and limitations
+- **Implement DevSecOps practices with automated dependency vulnerability scanning**
 - Plan resource allocation for production migrations
 - Establish testing and validation strategies
 - Create phased rollout plans with measurable milestones
+- **Generate compliance artifacts (SBOM, VDR, VEX) for supply chain security**
 
 ## 2. Technical Context
 
@@ -153,6 +156,7 @@ Document areas requiring human validation:
 java-modernizing/
 ├── docs/
 │   ├── RESEARCH.md           (existing comprehensive research)
+│   ├── OWASP.md              (dependency vulnerability checking strategy)
 │   ├── MIGRATION_PHASE1.md   (Java 11→17 + SB 2.4→3.0)
 │   ├── MIGRATION_PHASE2.md   (Java 17→21 + optimizations)
 │   └── LESSONS_LEARNED.md    (post-migration insights)
@@ -199,17 +203,31 @@ java-modernizing/
 │       ├── TaskServiceTest.java
 │       └── UserServiceTest.java
 ├── pom.xml
+├── dependency-suppression.xml (OWASP false positive suppression)
 ├── WARP.md (this file)
 └── README.md
 ```
 
-## 6. Migration Strategy
+## 6. Security-First Migration Strategy (DevSecOps)
 
-### 6.1. Phase 0: Baseline Stabilization
+This project follows the comprehensive OWASP-based Software Composition Analysis (SCA) methodology documented in `docs/OWASP.md`. Security verification is integrated into every phase of the migration lifecycle.
+
+### 6.1. Phase 0: Baseline Stabilization & Security Assessment
 - Ensure Spring Boot 2.4 application is fully functional
 - Write comprehensive test suite (unit + integration)
 - Document all deprecation warnings
 - Establish performance baseline metrics
+
+**Security Actions (Pre-Migration):**
+1. **Baseline Vulnerability Scan:** Run OWASP Dependency-Check to establish security baseline
+   - Quantify inherited security debt (critical/high CVEs)
+   - Generate initial SBOM using OWASP Dep-Scan
+2. **NVD API Configuration:** Obtain and configure NVD API Key for efficient scanning
+   - Set up H2 database cache to prevent rate limiting in CI/CD
+3. **False Positive Management:** Create `dependency-suppression.xml` for known false positives
+   - Document and version suppress file in repository
+   - Review and categorize each suppression with rationale
+4. **Security Target Definition:** Migration must result in CVE count ≤ baseline
 
 ### 6.2. Phase 1: Primary Migration (Java 17 + Spring Boot 3.0)
 **OpenRewrite Recipe:** `org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0`
@@ -222,13 +240,22 @@ java-modernizing/
 - Transform Spring Security to Lambda DSL
 - Update configuration property names
 
+**Automated Security Remediation:**
+- **OpenRewrite DependencyVulnerabilityCheck:** Apply automated patch upgrades for known CVEs
+  - Use `maximumUpgradeDelta=PATCH` for safe, non-breaking updates
+  - Flag minor/major version upgrades for manual review
+- **Taint Analysis:** Run `FindXssVulnerability` recipe to detect XSS risks introduced by refactoring
+
 **Manual Tasks:**
 1. Review and test SecurityConfig Lambda DSL transformations
 2. Refactor RestTemplate SSL/TLS configuration for HttpClient 5.x
 3. Validate connection pooling behavior
 4. Update test assertions for new Spring Security defaults
 5. Address any custom filter chain ordering issues
-6. Run full regression test suite
+6. **Gated Check (Critical):** Run Dependency-Check after Spring Boot upgrade
+   - Fail build if critical/high CVEs introduced by transitive dependencies
+   - Special focus on javax→jakarta namespace migration risks
+7. Run full regression test suite
 
 ### 6.3. Phase 2: Optimization (Java 21)
 **OpenRewrite Recipe:** `org.openrewrite.java.migrate.UpgradeToJava21`
@@ -242,7 +269,10 @@ java-modernizing/
 1. Enable Virtual Threads in Tomcat configuration
 2. Benchmark application throughput and latency
 3. Adopt Java 21 language features in appropriate locations
-4. Document performance improvements
+4. **Final Security Validation:** Execute zero-tolerance vulnerability scan
+   - Run OWASP Dep-Scan with reachability analysis to prioritize exploitable CVEs
+   - Audit and purge obsolete suppression entries from `dependency-suppression.xml`
+5. Document performance improvements
 
 ### 6.4. Validation Requirements
 After each phase:
@@ -250,7 +280,15 @@ After each phase:
 - Application must start successfully
 - All API endpoints must respond correctly
 - Security rules must be enforced identically
+- **Security validation:** No new critical/high CVEs introduced (compared to baseline)
 - Performance metrics must meet or exceed baseline
+
+### 6.5. Post-Migration: Compliance Artifacts
+Generate and deliver the following security artifacts:
+1. **SBOM (Software Bill-of-Materials):** Complete inventory of all dependencies and versions
+2. **VDR (Vulnerability Disclosure Report):** Comprehensive vulnerability assessment
+3. **CSAF 2.0 VEX (Vulnerability Exploitability eXchange):** Document non-exploitable CVEs with reachability analysis
+4. **Updated Suppression File:** Clean, audited list of accepted risks with rationale
 
 ## 7. Build Configuration
 
@@ -259,8 +297,40 @@ After each phase:
 - `spring-boot-maven-plugin`
 - `maven-surefire-plugin` (test execution)
 - `rewrite-maven-plugin` (OpenRewrite integration)
+- **`dependency-check-maven` (OWASP Dependency-Check for SCA)**
 
-### 7.2. OpenRewrite Configuration
+### 7.2. OWASP Dependency-Check Configuration
+```xml
+<plugin>
+    <groupId>org.owasp</groupId>
+    <artifactId>dependency-check-maven</artifactId>
+    <version>11.0.0+</version>
+    <configuration>
+        <!-- NVD API Key for efficient scanning (highly recommended) -->
+        <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+        <!-- Fail build on CVSS score >= 7 (High/Critical) -->
+        <failBuildOnCVSS>7</failBuildOnCVSS>
+        <!-- Include transitive dependencies (critical for detecting inherited risks) -->
+        <skipTestScope>false</skipTestScope>
+        <!-- False positive suppression file -->
+        <suppressionFile>dependency-suppression.xml</suppressionFile>
+        <!-- Report formats -->
+        <formats>
+            <format>HTML</format>
+            <format>JSON</format>
+        </formats>
+    </configuration>
+    <executions>
+        <execution>
+            <goals>
+                <goal>check</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+```
+
+### 7.3. OpenRewrite Configuration
 ```xml
 <plugin>
     <groupId>org.openrewrite.maven</groupId>
@@ -268,9 +338,19 @@ After each phase:
     <version>5.x.x</version>
     <configuration>
         <activeRecipes>
-            <!-- Phase 1 -->
+            <!-- Phase 1: Migration -->
             <recipe>org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0</recipe>
+            <!-- Security: Automated vulnerability patching -->
+            <recipe>org.openrewrite.java.dependencies.DependencyVulnerabilityCheck</recipe>
+            <!-- Security: XSS detection for refactored code -->
+            <recipe>org.openrewrite.analysis.java.security.FindXssVulnerability</recipe>
         </activeRecipes>
+        <recipeConfig>
+            <org.openrewrite.java.dependencies.DependencyVulnerabilityCheck>
+                <!-- Safe default: only patch upgrades, flag minor/major for review -->
+                <maximumUpgradeDelta>PATCH</maximumUpgradeDelta>
+            </org.openrewrite.java.dependencies.DependencyVulnerabilityCheck>
+        </recipeConfig>
     </configuration>
     <dependencies>
         <dependency>
@@ -278,14 +358,20 @@ After each phase:
             <artifactId>rewrite-spring</artifactId>
             <version>5.x.x</version>
         </dependency>
+        <dependency>
+            <groupId>org.openrewrite.recipe</groupId>
+            <artifactId>rewrite-java-dependencies</artifactId>
+            <version>1.x.x</version>
+        </dependency>
     </dependencies>
 </plugin>
 ```
 
-### 7.3. Testing Strategy
+### 7.4. Testing Strategy
 - **Unit Tests:** Mockito-based service layer tests
 - **Integration Tests:** `@SpringBootTest` with TestRestTemplate
 - **Security Tests:** `@WithMockUser` for authorization testing
+- **Dependency Security Tests:** OWASP Dependency-Check integration in CI/CD pipeline
 - **Test Coverage Target:** Minimum 80% line coverage
 
 ## 8. Documentation Requirements
@@ -302,6 +388,7 @@ Each migration phase will have detailed documentation:
 - Prerequisites and dependency versions
 - Step-by-step OpenRewrite execution
 - Automated changes summary
+- **Security scan results:** Baseline vs. post-migration CVE comparison
 - Manual intervention checklist
 - Validation test results
 - Before/after code comparisons for critical changes
@@ -338,8 +425,11 @@ Each migration phase will have detailed documentation:
 The demonstration project will be considered successful when:
 
 ✅ **Functionality:** All three phases build, run, and pass tests
+✅ **Security:** Zero critical CVEs introduced; vulnerability count ≤ baseline
+✅ **Compliance:** SBOM, VDR, and VEX artifacts generated and validated
 ✅ **Documentation:** Comprehensive migration guides are complete
 ✅ **Automation:** OpenRewrite recipes successfully handle bulk changes
+✅ **DevSecOps:** OWASP SCA integrated into CI/CD as gated checks
 ✅ **Clarity:** Manual intervention points are clearly documented
 ✅ **Realism:** Code patterns reflect real-world enterprise applications
 ✅ **Education:** Project can be used as training material
@@ -449,17 +539,24 @@ Key changes:
 - **Risk:** Performance degradation in new runtime
   - **Mitigation:** Establish baseline metrics, benchmark after each phase
 
+- **Risk:** NVD API rate limiting causing CI/CD build failures
+  - **Mitigation:** Configure NVD API Key, implement H2 cache sharing, monitor API usage
+
+- **Risk:** Transitive dependencies introducing new CVEs during framework upgrades
+  - **Mitigation:** Gated checks after each major upgrade, automated patch application with OpenRewrite
+
 ### 13.2. Scope Risks
 - **Risk:** Feature creep beyond demonstration scope
   - **Mitigation:** Strict adherence to "out of scope" section, timeboxed implementation
 
 ## 14. Timeline Estimate
 
-- **Phase 0 (Baseline):** 2-3 days (application + tests)
-- **Phase 1 (SB 3.0 + Java 17):** 2-3 days (migration + validation + docs)
-- **Phase 2 (Java 21):** 1 day (migration + benchmarking)
+- **Phase 0 (Baseline):** 2-3 days (application + tests + security baseline)
+- **Phase 1 (SB 3.0 + Java 17):** 2-3 days (migration + gated security checks + validation + docs)
+- **Phase 2 (Java 21):** 1 day (migration + final security audit + benchmarking)
+- **Compliance Artifacts:** 0.5 day (SBOM/VDR/VEX generation)
 - **Documentation Polish:** 1 day
-- **Total:** 6-8 development days
+- **Total:** 6.5-8.5 development days
 
 ## 15. Maintenance Notes
 
@@ -474,10 +571,14 @@ Potential additions for extended learning:
 - Spring Boot 3.x Observability features
 - Project Loom structured concurrency patterns
 - Migration to Spring Boot 4.x when available
+- **Continuous vulnerability scanning in production (Shift Right)**
+- **Container image scanning integration (OS-level CVEs)**
+- **Automated dependency upgrade scheduling (monthly/quarterly)**
 
 ---
 
-**Document Version:** 1.0  
+**Document Version:** 2.0  
 **Last Updated:** 2025-12-07  
 **Author:** System Architect  
-**Status:** Ready for Implementation
+**Status:** Enhanced with OWASP SCA Integration  
+**See Also:** `docs/OWASP.md` for detailed security methodology
