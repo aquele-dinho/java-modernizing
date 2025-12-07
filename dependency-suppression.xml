@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions>
+    <!--
+      Baseline suppression file for OWASP Dependency-Check.
+      Add <suppress> entries here only for validated false positives.
+      This file is referenced from pom.xml as dependency-suppression.xml.
+    -->
+</suppressions>
