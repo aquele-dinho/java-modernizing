@@ -33,8 +33,6 @@ This demonstration application will enable development teams to:
 ✅ **Completed:**
 - Project structure and Git repository
 - Maven configuration with all dependencies
-- OWASP Dependency-Check plugin integration
-- OpenRewrite plugin with security recipes
 - Complete domain model (User, Task entities with javax.* annotations)
 - Repository layer (UserRepository, TaskRepository)
 - Security infrastructure (JWT authentication, SecurityConfig with legacy patterns)
@@ -44,16 +42,17 @@ This demonstration application will enable development teams to:
 - Configuration (application.properties, RestClientConfig, data.sql)
 - OpenAPI/Swagger UI integration
 - Documentation (WARP.md, README.md, docs/OWASP.md, docs/TASKS.md)
+- Unit tests (TaskServiceTest, UserServiceTest, AuthenticationServiceTest)
+- Integration tests (TaskControllerIntegrationTest, SecurityIntegrationTest)
+- JavaDoc documentation for public APIs
+- Inline MIGRATION NOTE comments in legacy code capturing key migration points
+- OWASP Dependency-Check and OpenRewrite plugin configuration documented in guides (plugins intentionally removed from the Phase 0 pom to simulate a real-world legacy baseline)
 
 ❌ **Not Yet Implemented (Intentional for Baseline Demo):**
-- Integration tests (SecurityIntegrationTest, TaskControllerIntegrationTest)
-- Unit tests (TaskServiceTest, UserServiceTest, AuthenticationServiceTest)
-- JavaDoc documentation for public APIs
-- Inline MIGRATION NOTE comments in legacy code
-- Security baseline scan execution (to be done during guide creation)
+- Security baseline scan execution (to be done during guide-driven exercises)
 - Deprecation warnings documentation
 
-**Status:** Application compiles, runs, and is fully functional. Missing tests and documentation will be implemented as part of demonstrating the modernization process.
+**Status:** Application compiles, runs, and is fully functional. Tests and documentation are in place; remaining baseline work is primarily security baseline scanning and deprecation documentation.
 
 ### 2.2. Current State (Baseline)
 - **Java Version:** Java 11 (LTS)
@@ -189,7 +188,7 @@ java-modernizing/
 │   ├── MIGRATION_PHASE1.md   (Java 11→17 + SB 2.4→3.0)
 │   ├── MIGRATION_PHASE2.md   (Java 17→21 + optimizations)
 │   └── LESSONS_LEARNED.md    (post-migration insights)
-├── src/main/java/com/demo/modernization/
+├── src/main/java/dev/tiodati/demo/modernization/
 │   ├── ModernizationDemoApplication.java
 │   ├── config/
 │   │   ├── SecurityConfig.java
@@ -224,7 +223,7 @@ java-modernizing/
 │   ├── application.properties
 │   ├── application-dev.properties
 │   └── data.sql (sample data)
-├── src/test/java/com/demo/modernization/
+├── src/test/java/dev/tiodati/demo/modernization/
 │   ├── integration/
 │   │   ├── TaskControllerIntegrationTest.java
 │   │   └── SecurityIntegrationTest.java
@@ -232,7 +231,6 @@ java-modernizing/
 │       ├── TaskServiceTest.java
 │       └── UserServiceTest.java
 ├── pom.xml
-├── dependency-suppression.xml (OWASP false positive suppression)
 ├── WARP.md (this file)
 └── README.md
 ```
