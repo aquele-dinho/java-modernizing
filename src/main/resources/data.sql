@@ -1,8 +1,8 @@
 -- Sample users (passwords are BCrypt encoded)
 -- Password for both users: "password"
 INSERT INTO users (id, username, email, password, roles, created_at) VALUES
-(1, 'admin', 'admin@demo.com', '$2a$10$XpBJu0zW3qRl9XZnNbT8zOP7jZd7HhZq0u5KP4TpVZ7vBqxZw/j8G', 'USER,ADMIN', CURRENT_TIMESTAMP),
-(2, 'user', 'user@demo.com', '$2a$10$XpBJu0zW3qRl9XZnNbT8zOP7jZd7HhZq0u5KP4TpVZ7vBqxZw/j8G', 'USER', CURRENT_TIMESTAMP);
+(1, 'admin', 'admin@demo.com', '$2y$05$4haVnHmVRaXcTwn8CSVijulJu2NGU4Vzs031HDPbBFZoFM4.IoKWm', 'USER,ADMIN', CURRENT_TIMESTAMP),
+(2, 'user', 'user@demo.com', '$2y$05$4haVnHmVRaXcTwn8CSVijulJu2NGU4Vzs031HDPbBFZoFM4.IoKWm', 'USER', CURRENT_TIMESTAMP);
 
 -- Sample tasks
 INSERT INTO tasks (id, title, description, status, priority, assigned_to_id, created_at, updated_at) VALUES
