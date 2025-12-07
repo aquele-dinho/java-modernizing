@@ -16,6 +16,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class ModernizationDemoApplication {
     
     public static void main(String[] args) {
-        SpringApplication.run(ModernizationDemoApplication.java, args);
+        SpringApplication.run(ModernizationDemoApplication.class, args);
     }
 }
