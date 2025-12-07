@@ -21,6 +21,9 @@
 
 ## Phase 9: Create Step-by-Step Modernization & Security Guide
 
+- [x] Initial English and Brazilian Portuguese guides created: GUIDE_PHASE1.md/pt-BR, GUIDE_PHASE2.md/pt-BR, GUIDE_SECURITY.md/pt-BR
+- [x] Ensure each guide has a Brazilian Portuguese version (e.g., GUIDE_PHASE1_pt-BR.md, GUIDE_PHASE2_pt-BR.md, GUIDE_SECURITY_pt-BR.md)
+
 ### 9.1 Create GUIDE_PHASE1.md (Java 11→17 + Spring Boot 2.4→3.0)
 - [ ] Document guide overview and objectives
 - [ ] **Section 0: Verify Baseline Application (Real-World Starting Point)**
