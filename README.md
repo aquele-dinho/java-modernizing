@@ -69,7 +69,13 @@ mvn spring-boot:run
 
 The application will start on `http://localhost:8080`
 
-### 3. Access H2 Console (Development)
+### 3. Access Swagger UI (API Documentation)
+
+- **URL:** http://localhost:8080/swagger-ui.html
+- Interactive API documentation and testing interface
+- Click **Authorize** button and enter JWT token from login
+
+### 4. Access H2 Console (Development)
 
 - **URL:** http://localhost:8080/h2-console
 - **JDBC URL:** `jdbc:h2:mem:taskdb`
@@ -86,6 +92,20 @@ The application comes with pre-configured test users:
 | `user`   | `password` | USER        |
 
 ## 📡 API Endpoints
+
+### 🌐 Interactive Documentation
+
+The easiest way to explore and test the API is through **Swagger UI**:
+
+👉 **http://localhost:8080/swagger-ui.html**
+
+**Steps to use Swagger UI:**
+1. Start the application
+2. Open Swagger UI in your browser
+3. Use the `/api/auth/login` endpoint to get a JWT token
+4. Click the **Authorize** button at the top
+5. Enter `Bearer YOUR_TOKEN_HERE` and click **Authorize**
+6. Now you can test all authenticated endpoints!
 
 ### Authentication Endpoints (Public)
 

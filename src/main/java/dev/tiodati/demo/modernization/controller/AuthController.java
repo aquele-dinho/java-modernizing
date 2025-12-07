@@ -4,6 +4,8 @@ import dev.tiodati.demo.modernization.dto.JwtResponse;
 import dev.tiodati.demo.modernization.dto.LoginRequest;
 import dev.tiodati.demo.modernization.dto.RegisterRequest;
 import dev.tiodati.demo.modernization.service.AuthenticationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,7 @@ import javax.validation.Valid;
  */
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Authentication", description = "User registration and login endpoints")
 public class AuthController {
     
     @Autowired
@@ -28,6 +31,7 @@ public class AuthController {
      * @param registerRequest registration details
      * @return JWT token response
      */
+    @Operation(summary = "Register new user", description = "Create a new user account and receive JWT token")
     @PostMapping("/register")
     public ResponseEntity<JwtResponse> register(@Valid @RequestBody RegisterRequest registerRequest) {
         JwtResponse response = authenticationService.register(registerRequest);
@@ -40,6 +44,7 @@ public class AuthController {
      * @param loginRequest login credentials
      * @return JWT token response
      */
+    @Operation(summary = "Login", description = "Authenticate with username/password and receive JWT token")
     @PostMapping("/login")
     public ResponseEntity<JwtResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
         JwtResponse response = authenticationService.login(loginRequest);

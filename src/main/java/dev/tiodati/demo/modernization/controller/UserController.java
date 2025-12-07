@@ -2,6 +2,9 @@ package dev.tiodati.demo.modernization.controller;
 
 import dev.tiodati.demo.modernization.dto.UserDto;
 import dev.tiodati.demo.modernization.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,6 +19,8 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/users")
+@Tag(name = "Users", description = "User management operations")
+@SecurityRequirement(name = "bearerAuth")
 public class UserController {
     
     @Autowired

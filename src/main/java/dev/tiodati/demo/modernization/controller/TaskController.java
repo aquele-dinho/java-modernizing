@@ -2,6 +2,9 @@ package dev.tiodati.demo.modernization.controller;
 
 import dev.tiodati.demo.modernization.dto.TaskDto;
 import dev.tiodati.demo.modernization.service.TaskService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +21,8 @@ import javax.validation.Valid;
  */
 @RestController
 @RequestMapping("/api/tasks")
+@Tag(name = "Tasks", description = "Task management operations")
+@SecurityRequirement(name = "bearerAuth")
 public class TaskController {
     
     @Autowired
