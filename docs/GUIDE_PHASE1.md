@@ -264,12 +264,229 @@ Goal: Validate functional behavior, tests, and performance after migration.
 
 ## Before/After Code Snippets & Troubleshooting
 
-The final section of this guide should include:
-- Representative **before/after** snippets for:
-  - Entities (javax → jakarta).
-  - Security configuration (legacy DSL → lambda DSL).
-  - Rest client configuration (HttpClient 4.x → 5.x).
-- A **Troubleshooting** subsection with:
-  - Common build errors after migration and how to fix them.
-  - Typical OWASP Dependency-Check issues (missing NVD API key, proxy problems, corrupt DB, etc.).
-  - Common OpenRewrite pitfalls (recipes not applied, missing dependencies in the plugin).
+This section provides **concrete examples** from the baseline codebase and how they are expected to look after the migration. Use these as reference when reviewing `rewrite.patch` and the actual changes in your project.
+
+### 1. Entities: javax → jakarta
+
+**Before (current baseline – `User` entity using javax.*)**
+
+```java path=/Users/aquele_dinho/Projects/java-modernizing/src/main/java/dev/tiodati/demo/modernization/domain/User.java start=3
+// MIGRATION NOTE: These javax.* imports will be migrated to jakarta.* in Spring Boot 3.x:
+// - javax.persistence.* → jakarta.persistence.*
+// - javax.validation.* → jakarta.validation.*
+// OpenRewrite will automatically handle this namespace migration.
+import javax.persistence.*;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
+
+@Entity
+@Table(name = "users")
+public class User {
+```
+
+**After (expected, post-migration – using jakarta.*)**
+
+```java path=null start=null
+// After running OpenRewrite + Spring Boot 3 upgrade recipes
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+@Entity
+@Table(name = "users")
+public class User {
+    // class body remains essentially the same
+}
+```
+
+You should see similar namespace changes for `Task` and other entities:
+- `javax.persistence.*` → `jakarta.persistence.*`
+- `javax.validation.*` → `jakarta.validation.*`
+
+### 2. Security Configuration: Legacy DSL → Lambda DSL
+
+**Before (current baseline – legacy `WebSecurityConfigurerAdapter`)**
+
+```java path=/Users/aquele_dinho/Projects/java-modernizing/src/main/java/dev/tiodati/demo/modernization/config/SecurityConfig.java start=55
+/**
+ * MIGRATION NOTE: This method uses LEGACY METHOD CHAINING patterns:
+ * - .antMatchers() will become .requestMatchers()
+ * - .authorizeRequests() will become .authorizeHttpRequests()
+ * - Method chaining will be replaced with Lambda DSL in Spring Security 6.0
+ */
+@Override
+protected void configure(HttpSecurity http) throws Exception {
+    http
+            .cors()
+            .and()
+            .csrf()
+                .disable()
+            .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .and()
+            .authorizeRequests()
+                .antMatchers("/api/auth/**").permitAll()
+                .antMatchers("/h2-console/**").permitAll()
+                // Allow Swagger UI and OpenAPI endpoints
+                .antMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                .anyRequest().authenticated();
+
+    http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+    http.headers().frameOptions().sameOrigin();
+}
+```
+
+**After (expected, post-migration – `SecurityFilterChain` + Lambda DSL)**
+
+```java path=null start=null
+@Bean
+SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+        .cors(Customizer.withDefaults())
+        .csrf(AbstractHttpConfigurer::disable)
+        .sessionManagement(session ->
+            session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        )
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/api/auth/**", "/h2-console/**",
+                             "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html")
+                .permitAll()
+            .anyRequest().authenticated()
+        )
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+    http.headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
+    return http.build();
+}
+```
+
+When you inspect `rewrite.patch` and the actual changes, look for:
+- Removal of `WebSecurityConfigurerAdapter`.
+- Introduction of a `SecurityFilterChain` bean.
+- Use of `.authorizeHttpRequests()` + `.requestMatchers()` with the Lambda DSL.
+
+### 3. Rest Client: HttpClient 4.x → 5.x
+
+**Before (current baseline – `RestClientConfig` with HttpClient 4.x)**
+
+```java path=/Users/aquele_dinho/Projects/java-modernizing/src/main/java/dev/tiodati/demo/modernization/config/RestClientConfig.java start=15
+/**
+ * REST Client Configuration using Apache HttpClient 4.x.
+ * 
+ * MIGRATION NOTE: This configuration demonstrates legacy patterns that will need updates:
+ * 1. Apache HttpClient 4.x will be replaced with 5.x in Spring Boot 3.x
+ * 2. Package names will change: org.apache.http.* (4.x) → org.apache.hc.client5.* (5.x)
+ * 3. TrustAllStrategy is insecure and used only for demonstration purposes
+ */
+@Configuration
+public class RestClientConfig {
+
+    @Bean
+    public RestTemplate restTemplate() throws Exception {
+        SSLContext sslContext = SSLContextBuilder
+                .create()
+                .loadTrustMaterial(new TrustAllStrategy())  // INSECURE - for demo only!
+                .build();
+
+        SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(sslContext);
+
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setSSLSocketFactory(socketFactory)
+                .setMaxConnTotal(100)
+                .setMaxConnPerRoute(20)
+                .build();
+
+        HttpComponentsClientHttpRequestFactory requestFactory =
+                new HttpComponentsClientHttpRequestFactory(httpClient);
+        requestFactory.setConnectTimeout(5000);
+        requestFactory.setReadTimeout(5000);
+
+        return new RestTemplate(requestFactory);
+    }
+}
+```
+
+**After (expected, post-migration – HttpClient 5.x, org.apache.hc.client5 packages)**
+
+```java path=null start=null
+import org.apache.hc.client5.http.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.ssl.ClientTlsStrategyBuilder;
+import org.apache.hc.core5.ssl.SSLContexts;
+
+@Configuration
+public class RestClientConfig {
+
+    @Bean
+    RestTemplate restTemplate() throws Exception {
+        // In production, replace this with proper certificate validation
+        SSLContext sslContext = SSLContexts.custom()
+                .loadTrustMaterial(null, (chain, authType) -> true) // INSECURE – demo only
+                .build();
+
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setConnectionManagerShared(true)
+                .build();
+
+        HttpComponentsClientHttpRequestFactory requestFactory =
+                new HttpComponentsClientHttpRequestFactory(httpClient);
+        requestFactory.setConnectTimeout(5000);
+        requestFactory.setReadTimeout(5000);
+
+        return new RestTemplate(requestFactory);
+    }
+}
+```
+
+> NOTE: The "after" code above is illustrative. Use `rewrite.patch` and the official HttpClient 5.x documentation to fine-tune the details for your context.
+
+---
+
+## Troubleshooting
+
+This subsection lists common issues that can occur during the migration and how to investigate them.
+
+### 1. Build errors after running `mvn rewrite:run`
+
+Typical symptoms:
+- Classes not found (`ClassNotFoundException` or `cannot find symbol`) for `jakarta.*` imports.
+- Compilation errors in `SecurityConfig` after removing `WebSecurityConfigurerAdapter`.
+
+Recommended actions:
+- Verify that all required Jakarta dependencies were added (for example, validation, JPA).
+- Check that `SecurityConfig` was fully migrated to the `SecurityFilterChain` style.
+- Use `git diff` to carefully review what OpenRewrite changed.
+
+### 2. OWASP Dependency-Check issues
+
+Typical symptoms:
+- Build fails with connection errors to NVD.
+- Very long runtime on the first plugin execution.
+
+Recommended actions:
+- Confirm that `NVD_API_KEY` is defined in the environment and that `pom.xml` references `${env.NVD_API_KEY}`.
+- Check network connectivity / proxy configuration.
+- If the local database is corrupted, clear the Dependency-Check cache and run again.
+
+### 3. OpenRewrite recipes not applied
+
+Typical symptoms:
+- `mvn rewrite:dryRun` runs, but `rewrite.patch` is empty or nearly empty.
+
+Recommended actions:
+- Check that `org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0` is listed in `<activeRecipes>` or passed via `-Drewrite.activeRecipes`.
+- Verify that recipe dependencies (`rewrite-spring`, `rewrite-migrate-java`, `rewrite-java-dependencies`) are present in the plugin.
+- Run `mvn -X rewrite:dryRun` to see more detailed logs.
+
+### 4. Security behavior changes
+
+Typical symptoms:
+- Endpoints start requiring authentication where they were previously public, or vice-versa.
+
+Recommended actions:
+- Compare endpoint mappings before/after (especially `antMatchers` vs `requestMatchers`).
+- Add security integration tests for critical endpoints (login, registration, admin operations).
+
+Use this section as a checklist when validating the result of each execution (`dependency-check:check`, `rewrite:dryRun`, `rewrite:run`, `clean verify`).

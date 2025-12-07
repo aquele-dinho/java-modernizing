@@ -22,106 +22,106 @@
 ## Phase 9: Create Step-by-Step Modernization & Security Guide
 
 - [x] Initial English and Brazilian Portuguese guides created: GUIDE_PHASE1.md/pt-BR, GUIDE_PHASE2.md/pt-BR, GUIDE_SECURITY.md/pt-BR
-- [x] Ensure each guide has a Brazilian Portuguese version (e.g., GUIDE_PHASE1_pt-BR.md, GUIDE_PHASE2_pt-BR.md, GUIDE_SECURITY_pt-BR.md)
+- [ ] Ensure each guide has a Brazilian Portuguese version (e.g., GUIDE_PHASE1_pt-BR.md, GUIDE_PHASE2_pt-BR.md, GUIDE_SECURITY_pt-BR.md)
 
 ### 9.1 Create GUIDE_PHASE1.md (Java 11→17 + Spring Boot 2.4→3.0)
-- [ ] Document guide overview and objectives
-- [ ] **Section 0: Verify Baseline Application (Real-World Starting Point)**
-  - [ ] Verify pom.xml does NOT have OWASP Dependency-Check plugin configured
-  - [ ] Verify pom.xml does NOT have OpenRewrite plugin configured
-  - [ ] If plugins exist, remove them to simulate real-world legacy app
-  - [ ] Document application as-is: Java 11, Spring Boot 2.4.13, no security tooling
-- [ ] **Section 1: Configure OWASP Dependency-Check Plugin**
-  - [ ] Add dependency-check-maven plugin to pom.xml
-  - [ ] Configure nvdApiKey: ${env.NVD_API_KEY}
-  - [ ] Set failBuildOnCVSS=7 (High/Critical threshold)
-  - [ ] Configure suppressionFile: dependency-suppression.xml
-  - [ ] Set report formats: HTML, JSON
-  - [ ] Document NVD API Key setup: https://nvd.nist.gov/developers/request-an-api-key
-  - [ ] Export NVD_API_KEY environment variable
-- [ ] **Section 2: Run Pre-Migration Security Baseline**
-  - [ ] Run initial vulnerability scan: `mvn dependency-check:check`
-  - [ ] Review dependency-check-report.html in target/ directory
-  - [ ] Document baseline CVE count (critical/high/medium/low)
-  - [ ] Create dependency-suppression.xml for false positives
-  - [ ] Document rationale for each suppression
-  - [ ] Set security target: Post-migration CVE count ≤ baseline
-- [ ] **Section 3: Configure OpenRewrite Plugin**
-  - [ ] Add rewrite-maven-plugin to pom.xml
-  - [ ] Add rewrite-spring dependency (version 5.21.0+)
-  - [ ] Add rewrite-migrate-java dependency (version 2.26.0+)
-  - [ ] Add rewrite-java-dependencies for security recipes
-  - [ ] Configure activeRecipes: UpgradeSpringBoot_3_0
-  - [ ] Configure security recipe: DependencyVulnerabilityCheck
-  - [ ] Set maximumUpgradeDelta=PATCH for safe patching
-  - [ ] Document plugin configuration options
-- [ ] **Section 4: OpenRewrite Dry-Run**
-  - [ ] Run: `mvn rewrite:dryRun -Drewrite.activeRecipes=org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0`
-  - [ ] Review changes in rewrite.patch file
-  - [ ] Document automated changes (javax→jakarta, Spring Security DSL)
-  - [ ] Identify manual intervention points
-- [ ] **Section 5: Apply Migration**
-  - [ ] Run: `mvn rewrite:run`
-  - [ ] Review and commit changes
-  - [ ] Document breaking changes in SecurityConfig
-  - [ ] Document HttpClient 4.x→5.x migration steps
-- [ ] **Section 6: Manual Refactoring**
-  - [ ] Update RestClientConfig for HttpClient 5.x
-  - [ ] Fix Spring Security Lambda DSL issues
-  - [ ] Update deprecated configuration properties
-  - [ ] Fix test assertions for new defaults
-- [ ] **Section 7: Security Validation (Gated Check)**
-  - [ ] Run: `mvn dependency-check:check`
-  - [ ] Compare CVE counts: baseline vs. post-migration
-  - [ ] Document new vulnerabilities (if any)
-  - [ ] Update suppression file as needed
-  - [ ] Verify failBuildOnCVSS threshold behavior
-- [ ] **Section 8: Testing & Validation**
-  - [ ] Run: `mvn clean verify`
-  - [ ] Document test results
-  - [ ] Run application and test all endpoints
-  - [ ] Compare performance metrics
-- [ ] Include code snippets for before/after comparisons
-- [ ] Add troubleshooting section for common issues
+- [x] Document guide overview and objectives
+- [x] **Section 0: Verify Baseline Application (Real-World Starting Point)**
+  - [x] Verify pom.xml does NOT have OWASP Dependency-Check plugin configured
+  - [x] Verify pom.xml does NOT have OpenRewrite plugin configured
+  - [x] If plugins exist, remove them to simulate real-world legacy app
+  - [x] Document application as-is: Java 11, Spring Boot 2.4.13, no security tooling
+- [x] **Section 1: Configure OWASP Dependency-Check Plugin**
+  - [x] Add dependency-check-maven plugin to pom.xml
+  - [x] Configure nvdApiKey: ${env.NVD_API_KEY}
+  - [x] Set failBuildOnCVSS=7 (High/Critical threshold)
+  - [x] Configure suppressionFile: dependency-suppression.xml
+  - [x] Set report formats: HTML, JSON
+  - [x] Document NVD API Key setup: https://nvd.nist.gov/developers/request-an-api-key
+  - [x] Export NVD_API_KEY environment variable
+- [x] **Section 2: Run Pre-Migration Security Baseline**
+  - [x] Run initial vulnerability scan: `mvn dependency-check:check`
+  - [x] Review dependency-check-report.html in target/ directory
+  - [x] Document baseline CVE count (critical/high/medium/low)
+  - [x] Create dependency-suppression.xml for false positives
+  - [x] Document rationale for each suppression
+  - [x] Set security target: Post-migration CVE count ≤ baseline
+- [x] **Section 3: Configure OpenRewrite Plugin**
+  - [x] Add rewrite-maven-plugin to pom.xml
+  - [x] Add rewrite-spring dependency (version 5.21.0+)
+  - [x] Add rewrite-migrate-java dependency (version 2.26.0+)
+  - [x] Add rewrite-java-dependencies for security recipes
+  - [x] Configure activeRecipes: UpgradeSpringBoot_3_0
+  - [x] Configure security recipe: DependencyVulnerabilityCheck
+  - [x] Set maximumUpgradeDelta=PATCH for safe patching
+  - [x] Document plugin configuration options
+- [x] **Section 4: OpenRewrite Dry-Run**
+  - [x] Run: `mvn rewrite:dryRun -Drewrite.activeRecipes=org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0`
+  - [x] Review changes in rewrite.patch file
+  - [x] Document automated changes (javax→jakarta, Spring Security DSL)
+  - [x] Identify manual intervention points
+- [x] **Section 5: Apply Migration**
+  - [x] Run: `mvn rewrite:run`
+  - [x] Review and commit changes
+  - [x] Document breaking changes in SecurityConfig
+  - [x] Document HttpClient 4.x→5.x migration steps
+- [x] **Section 6: Manual Refactoring**
+  - [x] Update RestClientConfig for HttpClient 5.x
+  - [x] Fix Spring Security Lambda DSL issues
+  - [x] Update deprecated configuration properties
+  - [x] Fix test assertions for new defaults
+- [x] **Section 7: Security Validation (Gated Check)**
+  - [x] Run: `mvn dependency-check:check`
+  - [x] Compare CVE counts: baseline vs. post-migration
+  - [x] Document new vulnerabilities (if any)
+  - [x] Update suppression file as needed
+  - [x] Verify failBuildOnCVSS threshold behavior
+- [x] **Section 8: Testing & Validation**
+  - [x] Run: `mvn clean verify`
+  - [x] Document test results
+  - [x] Run application and test all endpoints
+  - [x] Compare performance metrics
+- [x] Include code snippets for before/after comparisons
+- [x] Add troubleshooting section for common issues
 
 ### 9.2 Create GUIDE_PHASE2.md (Java 17→21 + Optimizations)
-- [ ] Document guide overview and objectives
-- [ ] **Section 1: Java 21 Migration**
-  - [ ] Update pom.xml java.version to 21
-  - [ ] Run OpenRewrite: `UpgradeToJava21`
-  - [ ] Document automated changes (Sequenced Collections, Pattern Matching)
-- [ ] **Section 2: Virtual Threads Configuration**
-  - [ ] Enable Virtual Threads in application.properties
-  - [ ] Configure Tomcat for Virtual Threads
-  - [ ] Document configuration changes
-- [ ] **Section 3: Performance Benchmarking**
-  - [ ] Establish Java 17 baseline metrics
-  - [ ] Run benchmarks with Java 21 + Virtual Threads
-  - [ ] Document throughput and latency improvements
-- [ ] **Section 4: Final Security Audit**
-  - [ ] Run: `mvn dependency-check:check`
-  - [ ] Verify zero-tolerance for critical/high CVEs
-  - [ ] Audit and purge obsolete suppressions
-  - [ ] Document final security posture
-- [ ] **Section 5: Compliance Artifacts**
-  - [ ] Generate SBOM (Software Bill of Materials)
-  - [ ] Generate VDR (Vulnerability Disclosure Report)
-  - [ ] Generate VEX (Vulnerability Exploitability eXchange)
-  - [ ] Document compliance artifact usage
-- [ ] Include before/after performance charts
-- [ ] Document Java 21 feature adoption opportunities
+- [x] Document guide overview and objectives
+- [x] **Section 1: Java 21 Migration**
+  - [x] Update pom.xml java.version to 21
+  - [x] Run OpenRewrite: `UpgradeToJava21`
+  - [x] Document automated changes (Sequenced Collections, Pattern Matching)
+- [x] **Section 2: Virtual Threads Configuration**
+  - [x] Enable Virtual Threads in application properties / configuration
+  - [x] Configure Tomcat for Virtual Threads
+  - [x] Document configuration changes
+- [x] **Section 3: Performance Benchmarking**
+  - [x] Establish Java 17 baseline metrics
+  - [x] Run benchmarks with Java 21 + Virtual Threads
+  - [x] Document throughput and latency improvements
+- [x] **Section 4: Final Security Audit**
+  - [x] Run: `mvn dependency-check:check`
+  - [x] Verify zero-tolerance for critical/high CVEs
+  - [x] Audit and purge obsolete suppressions
+  - [x] Document final security posture
+- [x] **Section 5: Compliance Artifacts**
+  - [x] Generate SBOM (Software Bill of Materials)
+  - [x] Generate VDR (Vulnerability Disclosure Report)
+  - [x] Generate VEX (Vulnerability Exploitability eXchange)
+  - [x] Document compliance artifact usage
+- [x] Include before/after performance charts
+- [x] Document Java 21 feature adoption opportunities
 
 ### 9.3 Create GUIDE_SECURITY.md (OWASP SCA Best Practices)
-- [ ] Document NVD API Key benefits and setup
-- [ ] Explain CVSS scoring and threshold configuration
-- [ ] Guide on interpreting dependency-check-report.html
-- [ ] Best practices for suppression file management
-- [ ] Document false positive identification process
-- [ ] Explain H2 database cache for NVD data
-- [ ] CI/CD integration patterns (gated checks)
-- [ ] Reachability analysis with OWASP Dep-Scan
-- [ ] Document compliance artifact generation workflows
-- [ ] Include real-world CVE remediation examples
+- [x] Document NVD API Key benefits and setup
+- [x] Explain CVSS scoring and threshold configuration
+- [x] Guide on interpreting dependency-check-report.html
+- [x] Best practices for suppression file management
+- [x] Document false positive identification process
+- [x] Explain H2 database cache for NVD data
+- [x] CI/CD integration patterns (gated checks)
+- [x] Reachability analysis with OWASP Dep-Scan
+- [x] Document compliance artifact generation workflows
+- [x] Include real-world CVE remediation examples
 
 ---
 

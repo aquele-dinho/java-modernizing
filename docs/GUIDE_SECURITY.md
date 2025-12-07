@@ -39,6 +39,20 @@ Each section includes:
 - **Expected result:**
   - When the user runs a scan, Dependency-Check connects successfully to NVD using the key.
 
+Example (bash):
+
+```bash path=null start=null
+export NVD_API_KEY="<your-api-key-here>"
+```
+
+Example (Maven plugin snippet):
+
+```xml path=null start=null
+<configuration>
+    <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+</configuration>
+```
+
 ---
 
 ## Section 2 – CVSS Scoring and Threshold Configuration
@@ -55,6 +69,18 @@ Each section includes:
   - Example configuration: `<failBuildOnCVSS>7</failBuildOnCVSS>`.
 - **Expected result:**
   - Builds fail when vulnerabilities with CVSS ≥ 7 are detected (unless suppressed).
+
+Example (Maven plugin snippet):
+
+```xml path=null start=null
+<plugin>
+  <groupId>org.owasp</groupId>
+  <artifactId>dependency-check-maven</artifactId>
+  <configuration>
+    <failBuildOnCVSS>7</failBuildOnCVSS>
+  </configuration>
+</plugin>
+```
 
 ### Step 2.3 – Define policy in this project
 - **What you record:**
@@ -80,6 +106,16 @@ Each section includes:
 - **Expected result:**
   - Readers can navigate the report and identify high-risk components.
 
+Recommended workflow when reviewing the HTML report:
+- Start at the **Summary** section to see total CVEs by severity.
+- Drill down into **Dependencies** to find:
+  - Libraries with Critical/High CVEs.
+  - Transitive dependencies you might not realize you are using.
+- For each vulnerable dependency, open the CVE details and note:
+  - CVSS score and vector.
+  - Affected versions.
+  - References (vendor advisories, NVD, project issue trackers).
+
 ---
 
 ## Section 4 – Suppression File Management
@@ -97,11 +133,34 @@ Each section includes:
 - **Expected result (code):**
   - `dependency-suppression.xml` exists and is under version control.
 
+Example suppression (illustrative only):
+
+```xml path=null start=null
+<suppress>
+  <notes>False positive: library not used at runtime in this application</notes>
+  <cve>CVE-20xx-1234</cve>
+  <packageUrl>pkg:maven/com.example/legacy-lib@1.2.3</packageUrl>
+</suppress>
+```
+
+In the Maven plugin configuration, ensure:
+
+```xml path=null start=null
+<configuration>
+  <suppressionFile>dependency-suppression.xml</suppressionFile>
+</configuration>
+```
+
 ### Step 4.3 – Documenting rationale for each suppression
 - **What you require:**
   - Each suppression entry must have a comment or field explaining **why** it is safe.
 - **Expected result:**
   - Auditable trace of suppression decisions.
+
+Typical rationale categories:
+- **Environment not affected** (e.g., CVE affects Windows only, app runs on Linux only).
+- **Code path not reachable** (validated via reachability analysis or code review).
+- **Compensating controls** (e.g., WAF rules, network isolation) that mitigate exploitability.
 
 ### Step 4.4 – Periodic review and cleanup
 - **What you recommend:**
@@ -125,6 +184,10 @@ Each section includes:
 - **Expected result:**
   - Repeated scans run faster once cache is populated.
 
+Key points:
+- Configure the data directory (so the H2 DB can be reused between runs/CI jobs).
+- Ensure the cache directory is persisted between CI executions for maximum benefit.
+
 ---
 
 ## Section 6 – CI/CD Integration Patterns (Gated Checks)
@@ -135,11 +198,36 @@ Each section includes:
 - **Expected result:**
   - Pipelines fail when new high-severity vulnerabilities appear.
 
+Example (pseudo GitHub Actions job):
+
+```yaml path=null start=null
+jobs:
+  dependency-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Run OWASP Dependency-Check
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: mvn -q dependency-check:check
+```
+
 ### Step 6.2 – Handling failures in CI
 - **What you describe:**
   - Recommended triage workflow when the pipeline fails (review report, decide to fix vs. suppress vs. accept risk).
 - **Expected result:**
   - Teams have a clear response playbook.
+
+Suggested triage steps:
+1. Check whether the CVE affects a component that is actually loaded/used at runtime.
+2. If exploitable, prioritize upgrading the dependency.
+3. If not exploitable, decide whether to:
+   - Add a suppression entry with strong rationale, or
+   - Accept the risk temporarily with a documented plan to address it.
 
 ---
 
@@ -157,6 +245,14 @@ Each section includes:
 - **Expected result:**
   - Additional report identifying which CVEs are likely exploitable.
 
+Example (illustrative command):
+
+```bash path=null start=null
+dep-scan --src . --report-path dep-scan-report.json
+```
+
+Use the reachability findings to refine which CVEs must be fixed vs. which can be considered non-exploitable (and potentially moved into a VEX document).
+
 ---
 
 ## Section 8 – Compliance Artifact Workflows
@@ -167,11 +263,20 @@ Each section includes:
 - **Expected result:**
   - Teams know when and how to regenerate SBOMs (e.g., on each release).
 
+Practical tips:
+- Generate an SBOM as part of your release pipeline.
+- Store SBOMs with release artifacts so you can answer "what were we running?" for any given version.
+
 ### Step 8.2 – Creating VDR and VEX documents
 - **What you describe:**
   - How vulnerability findings are converted into VDR and then refined by VEX to mark non-exploitable issues.
 - **Expected result:**
   - Clear flow from scan → report → risk decision → documented artifact.
+
+Typical flow:
+1. Use Dependency-Check (and Dep-Scan) to generate raw findings.
+2. Summarize findings and remediation decisions in a VDR.
+3. Encode non-exploitable cases into a VEX document (e.g., CSAF-based) with clear justifications.
 
 ### Step 8.3 – Real-world CVE remediation examples
 - **What you provide:**
@@ -181,3 +286,18 @@ Each section includes:
     - Left as-is with strong justification and compensating controls.
 - **Expected result:**
   - Readers see concrete, realistic remediation patterns.
+
+Example remediation patterns (hypothetical CVEs):
+
+1. **Upgrade:**
+   - Finding: `com.fasterxml.jackson.core:jackson-databind` has a High CVE.
+   - Action: Upgrade from `2.13.x` to `2.15.x` as recommended by the vendor.
+   - Result: CVE disappears from subsequent Dependency-Check reports.
+
+2. **Suppress with rationale:**
+   - Finding: CVE in a library used only in test scope.
+   - Action: Add a suppression entry scoped to that package and version, with notes: "Test-only dependency, not packaged in production artifact".
+
+3. **Accepted risk with compensating controls:**
+   - Finding: Medium-level CVE in a transitive dependency where an upgrade would require a large framework jump.
+   - Action: Document in VDR/VEX that exploitability is low due to network isolation and strict authentication, and schedule the upgrade for a future major release.
