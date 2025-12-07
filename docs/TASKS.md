@@ -135,26 +135,16 @@
 - [x] Document: This represents a typical legacy Java 11 + Spring Boot 2.4 application
 
 ### 10.1 Build & Test Verification
-- [ ] Run: `mvn clean compile` (verify compilation succeeds)
-- [ ] Run: `mvn test` (verify all tests pass)
-- [ ] Run: `mvn package` (verify JAR creation succeeds)
-- [ ] Verify target/modernization-demo-1.0.0-SNAPSHOT.jar exists
-
-### 10.2 Runtime Verification
-- [ ] Start application: `mvn spring-boot:run`
-- [ ] Verify application starts on port 8080 without errors
-- [ ] Test authentication: register new user via /api/auth/register
-- [ ] Test authentication: login with admin credentials
-- [ ] Verify JWT token received in login response
-- [ ] Test all CRUD operations via Swagger UI
-- [ ] Access H2 console and verify database tables
-- [ ] Test authorization rules (admin-only endpoints)
+- [x] Run: `mvn clean compile` (verify compilation succeeds)
+- [x] Run: `mvn test` (verify all tests pass)
+- [x] Run: `mvn package` (verify JAR creation succeeds)
+- [x] Verify target/modernization-demo-1.0.0-SNAPSHOT.jar exists
 
 ### 10.3 Documentation Review
-- [ ] Review README.md for accuracy and completeness
-- [ ] Verify all code has proper JavaDoc
-- [ ] Ensure MIGRATION NOTE comments are in place
-- [ ] Review WARP.md alignment with implementation
+- [x] Review README.md for accuracy and completeness
+- [x] Verify all code has proper JavaDoc
+- [x] Ensure MIGRATION NOTE comments are in place
+- [x] Review WARP.md alignment with implementation
 
 ---
 

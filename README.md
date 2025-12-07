@@ -17,13 +17,33 @@ This project serves as a **baseline implementation** for demonstrating Java and 
 - **Phase 1:** Java 17 + Spring Boot 3.0 (Jakarta EE, Security 6.0 Lambda DSL)
 - **Phase 2:** Java 21 + Spring Boot 3.x (Virtual Threads, modern language features)
 
-## 🏗️ Architecture
+## 🏗️ Architecture (Baseline)
 
-**Task Management REST API** with the following components:
+Phase 0 is a **Task Management REST API** that intentionally represents a typical legacy Spring Boot 2.4 application:
 - **Domain:** User and Task entities with JPA relationships
 - **Security:** JWT-based stateless authentication with role-based access control
 - **API:** RESTful endpoints for authentication, task CRUD, and user management
 - **Database:** H2 in-memory database with sample data
+
+If you need detailed endpoint examples, test behavior, or project layout, see:
+- `docs/BASELINE_APP_REFERENCE.md`
+
+## 🧭 Using the Modernization Guides
+
+The **main goal** of this repository is to serve as a playground for the step-by-step modernization guides under `docs/`.
+
+Recommended reading/execution order:
+
+1. **Security & SCA workflow**  
+   - `docs/GUIDE_SECURITY.md` – how to configure OWASP Dependency-Check, NVD API key, suppression management, and security gates.
+2. **Phase 1 – Java 11 → 17 & Spring Boot 2.4 → 3.0**  
+   - `docs/GUIDE_PHASE1.md` – run OpenRewrite, migrate `javax.*` → `jakarta.*`, upgrade Spring Security, and apply security checks.  
+3. **Phase 2 – Java 17 → 21 & optimizations**  
+   - `docs/GUIDE_PHASE2.md` – migrate to Java 21, enable Virtual Threads, and validate performance and security.
+
+> 🇧🇷 Brazilian Portuguese versions of the guides are also available alongside the English files (same names with language suffix).
+
+Each guide assumes you can build the Phase 0 baseline and then walks you through the changes, including the security validation steps.
 
 ## 📝 Prerequisites
 
@@ -105,289 +125,78 @@ The application comes with pre-configured test users:
 | `admin`  | `password` | USER, ADMIN |
 | `user`   | `password` | USER        |
 
-## 📡 API Endpoints
+## 📡 API & Baseline Reference
 
-### 🌐 Interactive Documentation
+The baseline is a simple Task Management API with JWT-based security.
 
-The easiest way to explore and test the API is through **Swagger UI**:
+- For **interactive exploration**, use Swagger UI at `http://localhost:8080/swagger-ui.html`.
+- For **detailed cURL examples** of authentication, task, and user endpoints, see:
+  - `docs/BASELINE_APP_REFERENCE.md`
 
-👉 **http://localhost:8080/swagger-ui.html**
+## 🧪 Running Tests (Baseline)
 
-**Steps to use Swagger UI:**
-1. Start the application
-2. Open Swagger UI in your browser
-3. Use the `/api/auth/login` endpoint to get a JWT token
-4. Click the **Authorize** button at the top
-5. Enter `Bearer YOUR_TOKEN_HERE` and click **Authorize**
-6. Now you can test all authenticated endpoints!
+Phase 0 includes unit and integration tests to validate baseline behavior before you start migrating.
 
-### Authentication Endpoints (Public)
-
-#### Register New User
-```bash
-curl -X POST http://localhost:8080/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "newuser",
-    "email": "newuser@demo.com",
-    "password": "password123"
-  }'
-```
-
-#### Login
-```bash
-curl -X POST http://localhost:8080/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "admin",
-    "password": "password"
-  }'
-```
-
-**Response:**
-```json
-{
-  "token": "eyJhbGciOiJIUzUxMiJ9...",
-  "type": "Bearer",
-  "username": "admin",
-  "email": "admin@demo.com"
-}
-```
-
-### Task Endpoints (Authenticated)
-
-Save the JWT token from login response and use it in subsequent requests:
+Typical commands:
 
 ```bash
-export TOKEN="your_jwt_token_here"
+mvn test          # run tests
+mvn clean verify  # full verification build
 ```
 
-#### Get All Tasks
-```bash
-curl -H "Authorization: Bearer $TOKEN" \
-  http://localhost:8080/api/tasks
-```
+For a breakdown of which tests exist and what they cover, see `docs/BASELINE_APP_REFERENCE.md`.
 
-#### Get Task by ID
-```bash
-curl -H "Authorization: Bearer $TOKEN" \
-  http://localhost:8080/api/tasks/1
-```
+## 🔒 Security & OWASP SCA
 
-#### Create New Task
-```bash
-curl -X POST http://localhost:8080/api/tasks \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "New Task",
-    "description": "Task description",
-    "status": "OPEN",
-    "priority": "HIGH",
-    "assignedToId": 1
-  }'
-```
+Security is not just an add-on; it is a **first-class goal** of this modernization demo.
 
-#### Update Task
-```bash
-curl -X PUT http://localhost:8080/api/tasks/1 \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Updated Task",
-    "description": "Updated description",
-    "status": "IN_PROGRESS",
-    "priority": "MEDIUM",
-    "assignedToId": 1
-  }'
-```
+- The **baseline** intentionally behaves like a typical legacy app (no SCA tooling wired into `pom.xml`).
+- The **guides** show you how to introduce OWASP Dependency-Check and integrate it with OpenRewrite recipes.
 
-#### Delete Task (Admin Only)
-```bash
-curl -X DELETE http://localhost:8080/api/tasks/1 \
-  -H "Authorization: Bearer $TOKEN"
-```
+To learn how to:
+- Configure NVD API keys
+- Run gated security checks
+- Manage suppression files and generate SBOM/VDR/VEX
 
-### User Endpoints
+refer to **`docs/GUIDE_SECURITY.md`** and `docs/OWASP.md`.
 
-#### Get All Users (Admin Only)
-```bash
-curl -H "Authorization: Bearer $TOKEN" \
-  http://localhost:8080/api/users
-```
+## 🔄 Migration Path (High-Level)
 
-#### Get User by ID
-```bash
-curl -H "Authorization: Bearer $TOKEN" \
-  http://localhost:8080/api/users/1
-```
+The modernization journey is intentionally **guide-driven**:
 
-## 🧪 Running Tests
+- **Phase 0:** Establish and understand the legacy baseline (this README + `docs/BASELINE_APP_REFERENCE.md`).
+- **Phase 1:** Follow `docs/GUIDE_PHASE1.md` to migrate to Java 17 + Spring Boot 3.0 using OpenRewrite and gated security checks.
+- **Phase 2:** Follow `docs/GUIDE_PHASE2.md` to move to Java 21, enable Virtual Threads, and perform final security/performance validation.
 
-⚠️ **Note:** Tests are not yet implemented. This is intentional for the Phase 0 baseline demonstration.
+The guides contain the precise commands and OpenRewrite recipes; this README only summarizes the path.
 
-Once tests are implemented, run:
+## 📦 Project Structure (High-Level)
 
-```bash
-# Run all tests
-mvn test
+For a detailed, baseline-focused view of the project layout, use `docs/BASELINE_APP_REFERENCE.md`.
 
-# Run with coverage
-mvn clean test jacoco:report
-```
+At a high level:
 
-**Test Implementation Status:**
-- ❌ Integration Tests - Not implemented (SecurityIntegrationTest, TaskControllerIntegrationTest)
-- ❌ Unit Tests - Not implemented (TaskServiceTest, UserServiceTest)
-- 📋 See `docs/TASKS.md` Phase 7 for planned test implementation
-
-## 🔒 Security Scanning (OWASP Dependency-Check)
-
-This project integrates OWASP Dependency-Check for Software Composition Analysis (SCA) to detect vulnerable dependencies.
-
-### Run Vulnerability Scan
-
-```bash
-# Run dependency vulnerability check
-mvn dependency-check:check
-
-# View the report
-open target/dependency-check-report.html
-```
-
-### Baseline Security Assessment
-
-Before starting migration, establish a security baseline:
-
-```bash
-# 1. Run initial vulnerability scan
-mvn clean dependency-check:check
-
-# 2. Review the HTML report
-open target/dependency-check-report.html
-
-# 3. Document baseline CVE count
-# Note: Critical and High severity CVEs should be tracked
-
-# 4. Create suppression file for false positives
-# Edit dependency-suppression.xml to suppress known false positives
-```
-
-### Security Validation During Migration
-
-After each migration phase, run the security check to ensure no new critical vulnerabilities were introduced:
-
-```bash
-# After Phase 1 (Spring Boot 3.0 + Java 17)
-mvn dependency-check:check
-
-# Build will FAIL if CVSS >= 7.0 (High/Critical)
-# This is a GATED CHECK to prevent vulnerable code from being deployed
-```
-
-### Generate Compliance Artifacts
-
-```bash
-# Generate SBOM (Software Bill of Materials)
-mvn cyclonedx:makeAggregateBom
-
-# Generate comprehensive vulnerability report (JSON format)
-mvn dependency-check:check -Dformat=JSON,HTML
-```
-
-**Note:** The `dependency-suppression.xml` file contains documented suppressions for known false positives. Review and update this file after each migration phase.
-
-## 🔄 Migration Path with Security Validation
-
-### Phase 1: Spring Boot 3.0 + Java 17
-
-Use OpenRewrite to automate the migration with integrated security checks:
-
-```bash
-# 1. Preview changes (dry-run)
-mvn rewrite:dryRun
-
-# 2. Apply migration with security remediation
-mvn rewrite:run
-
-# 3. Update Java version
-export JAVA_HOME=$(/usr/libexec/java_home -v 17)
-
-# 4. CRITICAL: Run security scan after upgrade (Gated Check)
-mvn clean install dependency-check:check
-# Build will FAIL if critical CVEs are introduced
-
-# 5. Review security report
-open target/dependency-check-report.html
-```
-
-**Key Changes:**
-- `javax.*` → `jakarta.*` namespace migration
-- Spring Security method chaining → Lambda DSL
-- Apache HttpClient 4.x → 5.x
-- WebSecurityConfigurerAdapter → SecurityFilterChain
-- **Automated CVE patching** via OpenRewrite `DependencyVulnerabilityCheck`
-- **XSS vulnerability detection** via OpenRewrite `FindXssVulnerability`
-
-### Phase 2: Java 21 Optimization
-
-```bash
-# 1. Set Java 21
-export JAVA_HOME=$(/usr/libexec/java_home -v 21)
-
-# 2. Apply Java 21 migration recipe
-mvn rewrite:run -Drewrite.activeRecipes=org.openrewrite.java.migrate.UpgradeToJava21
-
-# 3. Final security validation (Zero-tolerance scan)
-mvn clean install dependency-check:check
-
-# 4. Audit and clean suppression file
-# Review dependency-suppression.xml and remove obsolete entries
-
-# 5. Generate final compliance artifacts
-mvn cyclonedx:makeAggregateBom
-mvn dependency-check:check -Dformat=JSON,HTML
-```
-
-## 📦 Project Structure
-
-```
+```text
 java-modernizing/
-├── src/main/java/dev/tiodati/demo/modernization/
-│   ├── config/          # Security and RestTemplate configuration
-│   ├── controller/      # REST API controllers
-│   ├── domain/          # JPA entities (User, Task)
-│   ├── dto/             # Data Transfer Objects
-│   ├── exception/       # Custom exceptions and handlers
-│   ├── repository/      # Spring Data JPA repositories
-│   ├── security/        # JWT authentication components
-│   └── service/         # Business logic layer
-├── src/main/resources/
-│   ├── application.properties  # App configuration
-│   └── data.sql                # Sample data
-├── src/test/java/       # Unit and integration tests
-├── docs/
-│   ├── RESEARCH.md      # Comprehensive migration research
-│   └── OWASP.md         # OWASP SCA methodology and integration
-├── target/
-│   └── dependency-check-report.html  # Vulnerability scan report
-├── pom.xml              # Maven with OpenRewrite + OWASP plugins
-├── dependency-suppression.xml        # False positive suppressions
-├── WARP.md              # Technical specification
-└── README.md            # This file
+├── src/main/java/dev/tiodati/demo/modernization/   # Application code
+├── src/test/java/dev/tiodati/demo/modernization/   # Unit & integration tests
+├── src/main/resources/                             # Configuration & data
+├── docs/                                           # Research + step-by-step guides
+├── pom.xml                                         # Maven build (baseline; tooling added via guides)
+├── WARP.md                                         # Specification
+└── README.md                                       # High-level overview & entrypoint
 ```
 
 ## 🔍 Legacy Patterns (Intentional)
 
-This baseline intentionally demonstrates patterns that will be migrated:
+The baseline intentionally demonstrates patterns that the guides will migrate:
 
-1. **javax.* imports** - Will migrate to jakarta.*
-2. **Spring Security method chaining** - `.antMatchers()`, `.authorizeRequests()`
-3. **WebSecurityConfigurerAdapter** - Deprecated in Spring Security 5.7
-4. **Apache HttpClient 4.x** - Package structure changes in 5.x
-5. **Deprecated property names** - `server.max.http.header.size`
+1. **`javax.*` imports** instead of `jakarta.*`
+2. **Spring Security method chaining** using `.antMatchers()` / `.authorizeRequests()` and `WebSecurityConfigurerAdapter`
+3. **Apache HttpClient 4.x** customization in `RestClientConfig`
+4. **Deprecated configuration properties** such as `server.max.http.header.size`
 
-These patterns are **documented as migration targets** in the codebase.
+These patterns are marked with `MIGRATION NOTE` comments throughout the code. The guides call them out explicitly when it is time to change them.
 
 ## 📚 Additional Resources
 
@@ -400,11 +209,11 @@ These patterns are **documented as migration targets** in the codebase.
 
 ## 🐛 Known Issues & Security Warnings
 
-- ⚠️ TrustAllStrategy in RestClientConfig is **insecure** and for demonstration only
+- ⚠️ `TrustAllStrategy` in `RestClientConfig` is **insecure** and for demonstration only
 - ⚠️ H2 console should be **disabled in production**
 - ⚠️ JWT secret should be **externalized** and secured in production
-- ⚠️ **Baseline may contain known CVEs** - This is intentional to demonstrate security improvement through modernization
-- ⚠️ Without NVD API Key, dependency scans will be **extremely slow** (can take 30+ minutes)
+- ⚠️ The baseline may contain known CVEs by design, to demonstrate improvement through modernization
+- ⚠️ Without an NVD API Key, OWASP Dependency-Check scans (once enabled) can be very slow
 
 ## 📝 License
 
@@ -426,8 +235,8 @@ The migration is considered successful when:
 
 ---
 
-**Version:** 2.0.0-SNAPSHOT (Phase 0 - Baseline with OWASP Integration)  
+**Version:** 2.0.0-SNAPSHOT (Phase 0 - Baseline)  
 **Java:** 11  
 **Spring Boot:** 2.4.13  
-**Security:** OWASP Dependency-Check + OpenRewrite Security Recipes  
-**Status:** ✅ Ready for Security-First Migration
+**Security:** Legacy baseline (OWASP + OpenRewrite added via guides)  
+**Status:** ✅ Ready for Security-First Migration (start with `docs/GUIDE_SECURITY.md`)
