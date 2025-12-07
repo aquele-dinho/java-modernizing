@@ -224,6 +224,10 @@ curl -H "Authorization: Bearer $TOKEN" \
 
 ## 🧪 Running Tests
 
+⚠️ **Note:** Tests are not yet implemented. This is intentional for the Phase 0 baseline demonstration.
+
+Once tests are implemented, run:
+
 ```bash
 # Run all tests
 mvn test
@@ -231,6 +235,11 @@ mvn test
 # Run with coverage
 mvn clean test jacoco:report
 ```
+
+**Test Implementation Status:**
+- ❌ Integration Tests - Not implemented (SecurityIntegrationTest, TaskControllerIntegrationTest)
+- ❌ Unit Tests - Not implemented (TaskServiceTest, UserServiceTest)
+- 📋 See `docs/TASKS.md` Phase 7 for planned test implementation
 
 ## 🔒 Security Scanning (OWASP Dependency-Check)
 
