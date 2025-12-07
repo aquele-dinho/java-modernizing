@@ -33,10 +33,17 @@ public class RestClientConfig {
      */
     @Bean
     public RestTemplate restTemplate() throws Exception {
-        // Create SSL context that trusts all certificates (INSECURE - for demo only)
+        // ⚠️ SECURITY WARNING: TrustAllStrategy is INSECURE and disables SSL certificate validation!
+        // This accepts ANY certificate, including invalid, expired, or self-signed certificates.
+        // NEVER use this in production! This pattern is intentionally included for migration demonstration.
+        // 
+        // MIGRATION NOTE: In production, either:
+        // 1. Use default SSL validation (remove custom SSLContext)
+        // 2. Load specific trusted certificates from a keystore
+        // 3. Use proper certificate validation with custom trust managers
         SSLContext sslContext = SSLContextBuilder
                 .create()
-                .loadTrustMaterial(new TrustAllStrategy())
+                .loadTrustMaterial(new TrustAllStrategy())  // INSECURE - for demo only!
                 .build();
         
         // Create custom SSL socket factory

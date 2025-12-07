@@ -17,7 +17,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service for handling user authentication operations.
- * Manages user registration and login functionality.
+ * Manages user registration and login with JWT token generation.
+ * 
+ * <p>This service integrates with Spring Security for authentication
+ * and uses BCrypt for password encoding.</p>
  */
 @Service
 public class AuthenticationService {
@@ -36,9 +39,9 @@ public class AuthenticationService {
     
     /**
      * Register a new user in the system.
-     *
-     * @param registerRequest registration details
-     * @return JWT response with authentication token
+     * 
+     * @param registerRequest registration details including username, email, and password
+     * @return JWT response containing authentication token and user details
      * @throws RuntimeException if username or email already exists
      */
     @Transactional
@@ -70,9 +73,10 @@ public class AuthenticationService {
     
     /**
      * Authenticate a user and generate JWT token.
-     *
-     * @param loginRequest login credentials
-     * @return JWT response with authentication token
+     * 
+     * @param loginRequest login credentials (username and password)
+     * @return JWT response containing authentication token and user details
+     * @throws org.springframework.security.core.AuthenticationException if credentials are invalid
      */
     public JwtResponse login(LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(

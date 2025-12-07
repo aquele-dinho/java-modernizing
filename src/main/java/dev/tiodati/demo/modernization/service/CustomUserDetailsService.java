@@ -17,6 +17,10 @@ import java.util.stream.Collectors;
 /**
  * Custom UserDetailsService implementation for Spring Security.
  * Loads user details from the database for authentication.
+ * 
+ * <p>This service is used by Spring Security to load user-specific data
+ * during authentication. It converts the application's User entity into
+ * Spring Security's UserDetails object with proper role mappings.</p>
  */
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
@@ -24,6 +28,21 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Autowired
     private UserRepository userRepository;
     
+    /**
+     * Load user details by username for authentication.
+     * 
+     * <p>This method:
+     * <ol>
+     *   <li>Retrieves user from database by username</li>
+     *   <li>Parses comma-separated roles and converts to authorities</li>
+     *   <li>Prefixes each role with "ROLE_" as required by Spring Security</li>
+     *   <li>Returns Spring Security UserDetails object</li>
+     * </ol>
+     * 
+     * @param username the username identifying the user
+     * @return fully populated UserDetails object
+     * @throws UsernameNotFoundException if user is not found
+     */
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

@@ -1,6 +1,9 @@
 package dev.tiodati.demo.modernization.domain;
 
-// MIGRATION NOTE: javax.persistence will migrate to jakarta.persistence in Spring Boot 3.x
+// MIGRATION NOTE: These javax.* imports will be migrated to jakarta.* in Spring Boot 3.x:
+// - javax.persistence.* → jakarta.persistence.*
+// - javax.validation.* → jakarta.validation.*
+// OpenRewrite will automatically handle this namespace migration.
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;

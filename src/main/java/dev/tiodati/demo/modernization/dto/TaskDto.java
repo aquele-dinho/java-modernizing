@@ -3,6 +3,7 @@ package dev.tiodati.demo.modernization.dto;
 import dev.tiodati.demo.modernization.domain.Priority;
 import dev.tiodati.demo.modernization.domain.TaskStatus;
 
+// MIGRATION NOTE: javax.validation.* will migrate to jakarta.validation.* in Spring Boot 3.x
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;

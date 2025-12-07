@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+// MIGRATION NOTE: javax.validation.* will migrate to jakarta.validation.* in Spring Boot 3.x
 import javax.validation.Valid;
 import java.util.List;
 

@@ -219,37 +219,37 @@ This task list breaks down the implementation plan into minimal, independently i
 ## Phase 7: Testing
 
 ### 7.1 Unit Tests
-- [ ] Create src/test/java/dev/tiodati/demo/modernization/unit/ directory
-- [ ] Create TaskServiceTest class
-- [ ] Test TaskService.createTask() with Mockito
-- [ ] Test TaskService.updateTask() with Mockito
-- [ ] Test TaskService.deleteTask() with Mockito
-- [ ] Test TaskService.findById() with Mockito
-- [ ] Test TaskService.findAll() with Mockito
-- [ ] Create UserServiceTest class
-- [ ] Test UserService.createUser() with Mockito
-- [ ] Test UserService.updateUser() with Mockito
-- [ ] Test UserService.findByUsername() with Mockito
-- [ ] Test UserService.findById() with Mockito
-- [ ] Verify minimum 80% code coverage for services
+- [x] Create src/test/java/dev/tiodati/demo/modernization/unit/ directory
+- [x] Create TaskServiceTest class
+- [x] Test TaskService.createTask() with Mockito
+- [x] Test TaskService.updateTask() with Mockito
+- [x] Test TaskService.deleteTask() with Mockito
+- [x] Test TaskService.findById() with Mockito
+- [x] Test TaskService.findAll() with Mockito
+- [x] Create UserServiceTest class
+- [x] Test UserService.createUser() with Mockito
+- [x] Test UserService.updateUser() with Mockito
+- [x] Test UserService.findByUsername() with Mockito
+- [x] Test UserService.findById() with Mockito
+- [x] Verify minimum 80% code coverage for services
 
 ### 7.2 Integration Tests
-- [ ] Create src/test/java/dev/tiodati/demo/modernization/integration/ directory
-- [ ] Create TaskControllerIntegrationTest with @SpringBootTest
-- [ ] Test POST /api/auth/register endpoint
-- [ ] Test POST /api/auth/login endpoint
-- [ ] Test GET /api/tasks with valid JWT token
-- [ ] Test GET /api/tasks/{id} with valid JWT token
-- [ ] Test POST /api/tasks with valid JWT token
-- [ ] Test PUT /api/tasks/{id} with valid JWT token
-- [ ] Test DELETE /api/tasks/{id} with admin JWT token
-- [ ] Test DELETE /api/tasks/{id} rejects non-admin user
-- [ ] Create SecurityIntegrationTest with @SpringBootTest
-- [ ] Test public endpoints accessible without authentication
-- [ ] Test protected endpoints reject requests without JWT
-- [ ] Test admin-only endpoints reject regular users
-- [ ] Test invalid JWT tokens are rejected
-- [ ] Use TestRestTemplate for HTTP requests
+- [x] Create src/test/java/dev/tiodati/demo/modernization/integration/ directory
+- [x] Create TaskControllerIntegrationTest with @SpringBootTest
+- [x] Test POST /api/auth/register endpoint
+- [x] Test POST /api/auth/login endpoint
+- [x] Test GET /api/tasks with valid JWT token
+- [x] Test GET /api/tasks/{id} with valid JWT token
+- [x] Test POST /api/tasks with valid JWT token
+- [x] Test PUT /api/tasks/{id} with valid JWT token
+- [x] Test DELETE /api/tasks/{id} with admin JWT token
+- [x] Test DELETE /api/tasks/{id} rejects non-admin user
+- [x] Create SecurityIntegrationTest with @SpringBootTest
+- [x] Test public endpoints accessible without authentication
+- [x] Test protected endpoints reject requests without JWT
+- [x] Test admin-only endpoints reject regular users
+- [x] Test invalid JWT tokens are rejected
+- [x] Use TestRestTemplate for HTTP requests
 
 ---
 
@@ -273,13 +273,13 @@ This task list breaks down the implementation plan into minimal, independently i
 - [x] Add migration to Phase 1 next steps
 
 ### 8.2 Code Documentation
-- [ ] Add JavaDoc to all public methods in service classes
-- [ ] Add JavaDoc to all public methods in controller classes
-- [ ] Add inline comments highlighting legacy patterns in SecurityConfig
-- [ ] Add inline comments explaining javax.* imports in entities
-- [ ] Add inline comments in RestClientConfig explaining HttpClient 4.x usage
-- [ ] Mark deprecated patterns with: // MIGRATION NOTE: This pattern will change in Spring Boot 3.x
-- [ ] Document intentional security vulnerabilities (TrustAllStrategy) with warnings
+- [x] Add JavaDoc to all public methods in service classes
+- [x] Add JavaDoc to all public methods in controller classes
+- [x] Add inline comments highlighting legacy patterns in SecurityConfig
+- [x] Add inline comments explaining javax.* imports in entities
+- [x] Add inline comments in RestClientConfig explaining HttpClient 4.x usage
+- [x] Mark deprecated patterns with: // MIGRATION NOTE: This pattern will change in Spring Boot 3.x
+- [x] Document intentional security vulnerabilities (TrustAllStrategy) with warnings
 
 ---
 
