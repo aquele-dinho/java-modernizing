@@ -27,6 +27,9 @@
         <!-- Dependency versions -->
         <httpclient.version>4.5.13</httpclient.version>
         <jjwt.version>0.9.1</jjwt.version>
+
+        <!-- Plugin versions -->
+        <dependency-check.maven.version>12.1.9</dependency-check.maven.version>
     </properties>
     
     <dependencies>
@@ -125,6 +128,33 @@
                         <include>**/*Test.java</include>
                     </includes>
                 </configuration>
+            </plugin>
+
+            <!-- OWASP Dependency-Check plugin for SCA baseline (Section 1) -->
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>${dependency-check.maven.version}</version>
+                <configuration>
+                    <!-- NVD API Key for efficient scanning (read from env var) -->
+                    <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+                    <!-- Fail build on CVSS score >= 7 (High/Critical) -->
+                    <failBuildOnCVSS>7</failBuildOnCVSS>
+                    <!-- False positive suppression file (created in Section 2) -->
+                    <suppressionFile>dependency-suppression.xml</suppressionFile>
+                    <!-- Report formats -->
+                    <formats>
+                        <format>HTML</format>
+                        <format>JSON</format>
+                    </formats>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
