@@ -10,6 +10,13 @@ This guide covers the upgrade from **Java 17** to **Java 21** on top of **Spring
 - Benchmarking performance.
 - Performing a **final security audit** and generating **compliance artifacts**.
 
+> **Versions validated for this reference implementation:**  
+> - Java toolchain: **Java 21**  
+> - Spring Boot parent: **3.5.8** (with embedded Tomcat 10.1.49, Hibernate 6.6.x, H2 2.3.x)  
+> - JJWT: **0.12.6** (`jjwt-api`, `jjwt-impl`, `jjwt-jackson`)  
+> - Springdoc OpenAPI starter: **2.8.14**  
+> - Apache HttpClient 5: **5.4.4**
+
 For each section we describe:
 - **Command** – what to run.
 - **Expected result** – runtime behavior, performance metrics, or code changes.
@@ -25,7 +32,7 @@ The goal is that, after following this guide:
 
 ## Section 1 – Java 21 Migration
 
-Goal: Upgrade the project to build and run on Java 21.
+Goal: Upgrade the project to build and run on Java 21 **and** align core frameworks and libraries with Java 21–compatible, up-to-date versions.
 
 ### Step 1.1 – Update pom.xml to Java 21
 - **What you change:**
@@ -67,6 +74,45 @@ If you want to preview changes first, run instead:
   - Any APIs that were replaced or upgraded by the recipe.
 - **Expected result:**
   - Readers see concrete before/after snippets illustrating Java 21 migrations.
+
+### Step 1.4 – Upgrade frameworks and direct dependencies for Java 21
+
+After the codebase compiles and tests pass on Java 21 with your existing Spring Boot 3.x baseline, incrementally upgrade core frameworks and **direct** dependencies to current, Java 21–compatible versions.
+
+- **What you change (high level):**
+  - Bump the Spring Boot parent to a recent 3.x line that officially supports Java 21 (this guide has been validated with **3.5.8**).
+  - Align first-party Spring dependencies with that parent (via the BOM).
+  - Upgrade direct dependencies that are **not** managed by the Boot BOM (for example, JJWT, Springdoc, Apache HttpClient).
+
+- **Procedure:**
+  1. **Spring Boot parent / BOM**  
+     - Update the `<parent>` section in `pom.xml` to a recent Spring Boot 3.x version that supports Java 21.  
+     - Let the Spring Boot BOM manage transitive versions for:
+       - Spring Framework modules (`spring-core`, `spring-web`, etc.).
+       - Embedded Tomcat, Logback, Jackson, SnakeYAML, and other core stack components.
+
+  2. **JJWT (JWT library)**  
+     - Ensure you are on a JJWT release line that is compatible with Java 17+ / Jakarta (for example, `0.11.x` or later).  
+     - Keep using the split-module pattern (`jjwt-api`, `jjwt-impl`, `jjwt-jackson`) and the key-based API (`Keys.hmacShaKeyFor`, `parserBuilder`, etc.).
+
+  3. **Springdoc OpenAPI**  
+     - Check the Springdoc compatibility matrix for your chosen Spring Boot 3.x version and upgrade `springdoc-openapi-starter-webmvc-ui` to the recommended 2.x line.  
+     - The goal is to use the latest Springdoc 2.x that is explicitly compatible with your Spring Boot minor/patch level.
+
+  4. **Apache HttpClient 5**  
+     - Upgrade `org.apache.httpcomponents.client5:httpclient5` to a current, non-alpha 5.x release that includes fixes for known CVEs.  
+     - Keep the `RestTemplate` configuration aligned with HttpClient 5 APIs.
+
+- **Expected result (code):**
+  - `pom.xml` reflects:
+    - Java 21 toolchain properties.
+    - A Spring Boot 3.x parent that supports Java 21.
+    - Direct dependency versions updated to current, Java 21–compatible lines.
+
+- **Expected result (behavior):**
+  - All tests still pass on Java 21.
+  - A subsequent OWASP Dependency-Check run shows **equal or fewer** Critical/High CVEs compared to the pre-upgrade Java 17 + SB 3.x state.
+  - In this reference implementation, upgrading to Spring Boot **3.5.8** (and its managed Tomcat version) removed previously flagged Tomcat CVEs, allowing `mvn clean verify` with `dependency-check:check` to pass with `failBuildOnCVSS=7`.
 
 ---
 
@@ -185,6 +231,7 @@ Goal: Perform a **zero-tolerance** security scan at the end of the modernization
 - **Expected result:**
   - Scan completes with HTML/JSON reports generated under `target/`.
   - The build passes only if no vulnerabilities are found above the configured CVSS threshold.
+  - If the scan fails due to CVEs in framework-managed components (for example, embedded Tomcat), first try upgrading the Spring Boot parent to a newer compatible 3.x release (as done with **3.5.8** in this reference implementation) before considering suppressions.
 
 ### Step 4.2 – Enforce zero-tolerance for Critical/High CVEs
 - **What you verify:**

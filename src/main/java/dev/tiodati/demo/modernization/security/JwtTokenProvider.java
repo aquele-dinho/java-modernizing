@@ -68,11 +68,11 @@ public class JwtTokenProvider {
      * @return username
      */
     public String getUsernameFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(jwtKey)
+        Claims claims = Jwts.parser()
+                .verifyWith(jwtKey)
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
 
         return claims.getSubject();
     }
@@ -85,10 +85,10 @@ public class JwtTokenProvider {
      */
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder()
-                    .setSigningKey(jwtKey)
+            Jwts.parser()
+                    .verifyWith(jwtKey)
                     .build()
-                    .parseClaimsJws(token);
+                    .parseSignedClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException ex) {
             // Any JWT parsing/validation issue results in an invalid token

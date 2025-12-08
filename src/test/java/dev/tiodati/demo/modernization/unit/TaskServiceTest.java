@@ -96,7 +96,7 @@ class TaskServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
-        assertEquals("Test Task", result.getContent().get(0).getTitle());
+        assertEquals("Test Task", result.getContent().getFirst().getTitle());
         verify(taskRepository, times(1)).findAll(pageable);
     }
     
@@ -147,7 +147,7 @@ class TaskServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
-        assertEquals(1L, result.getContent().get(0).getAssignedToId());
+        assertEquals(1L, result.getContent().getFirst().getAssignedToId());
         verify(taskRepository, times(1)).findByAssignedToId(1L, pageable);
     }
     

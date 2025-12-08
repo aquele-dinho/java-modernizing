@@ -78,7 +78,7 @@ class UserServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(2, result.size());
-        assertEquals("testuser", result.get(0).getUsername());
+        assertEquals("testuser", result.getFirst().getUsername());
         assertEquals("admin", result.get(1).getUsername());
         verify(userRepository, times(1)).findAll();
     }
@@ -300,7 +300,7 @@ class UserServiceTest {
         
         // Verify that the DTO doesn't expose password
         // This is implicit - UserDto doesn't have a password field
-        UserDto dto = result.get(0);
+        UserDto dto = result.getFirst();
         assertEquals("testuser", dto.getUsername());
         assertEquals("test@example.com", dto.getEmail());
     }
