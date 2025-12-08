@@ -291,6 +291,22 @@ After running OpenRewrite, the project will compile **only after** a few targete
   - `application.properties` uses `spring.sql.init.mode` instead of `spring.datasource.initialization-mode`.
   - `spring.jpa.defer-datasource-initialization=true` is set so that the JPA schema is created before `data.sql` runs.
 
+- **H2 idempotent seeding pattern used in this repo:**
+  - For in-memory H2 with `spring.jpa.hibernate.ddl-auto=create-drop`, `spring.jpa.defer-datasource-initialization=true`, and `spring.sql.init.mode=always`, `data.sql` may run multiple times as the test context starts and stops.
+  - To avoid primary key collisions between seeded rows and `GenerationType.IDENTITY`, make `data.sql` both **idempotent** and **sequence-aware**:
+
+  ```sql path=null start=null
+  -- Idempotent H2 seeding
+  MERGE INTO users (id, username, email, password, roles, created_at) KEY(id) VALUES (...);
+  MERGE INTO tasks (id, title, description, status, priority, assigned_to_id, created_at, updated_at) KEY(id) VALUES (...);
+
+  -- Ensure identity sequences continue after seeded ids
+  ALTER TABLE users ALTER COLUMN id RESTART WITH 3;
+  ALTER TABLE tasks ALTER COLUMN id RESTART WITH 6;
+  ```
+
+  - Adjust the `RESTART WITH` values to be `max(id) + 1` for your actual seed data.
+
 ### Step 6.4 – Update tests for new defaults
 - **What you do:**
   - Update any test annotations and expectations that depend on pre–Spring Boot 3 behavior.
@@ -338,6 +354,8 @@ Goal: Validate functional behavior, tests, and performance after migration.
   - Legacy JWT libraries that are not compatible with Java 17.
   - Changes in Spring Security 6 defaults (stricter authorization or error handling).
   Treat these failures as input to follow-up phases (for example, upgrading JJWT and adjusting security tests), not as evidence that the structural migration was incorrect.
+
+  In this reference implementation, after completing **Phase 1.1 – JWT & Security Alignment** on top of Phase 1, `mvn clean verify` is expected to pass **all unit and integration tests**. The only remaining build failure at that point should come from the OWASP `dependency-check:check` gate if high/critical CVEs are present.
 
 ### Step 8.2 – Run application and validate endpoints
 - **Command:**
@@ -589,10 +607,22 @@ Recommended actions:
 
 Typical symptoms:
 - ApplicationContext fails to start with H2 errors like `Table "USERS" not found` when executing `data.sql`.
+- Integration tests or runtime fail with primary key violations on `USERS` / `TASKS` even though `data.sql` appears to run successfully (for example, `PRIMARY KEY ON PUBLIC.USERS(ID) (/* key:1 */ ...)`).
 
 Recommended actions:
 - Ensure `spring.jpa.hibernate.ddl-auto` is set (for example, `create-drop` in this demo).
 - Add `spring.jpa.defer-datasource-initialization=true` so that the JPA schema is created before `data.sql` is applied.
+- For H2 in-memory databases where `data.sql` seeds explicit ids (such as 1 and 2 for users, 1–5 for tasks) and entities use `GenerationType.IDENTITY`, make `data.sql` idempotent and advance the identity sequence so that JPA-generated ids start **after** the seeded range:
+
+  ```sql path=null start=null
+  MERGE INTO users (id, username, email, password, roles, created_at) KEY(id) VALUES (...);
+  MERGE INTO tasks (id, title, description, status, priority, assigned_to_id, created_at, updated_at) KEY(id) VALUES (...);
+
+  ALTER TABLE users ALTER COLUMN id RESTART WITH 3;
+  ALTER TABLE tasks ALTER COLUMN id RESTART WITH 6;
+  ```
+
+- Adapt the `RESTART WITH` values to `max(id) + 1` for your own seed data.
 
 ### 6. JWT / DatatypeConverter issues
 

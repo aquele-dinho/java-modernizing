@@ -1,7 +1,7 @@
 package dev.tiodati.demo.modernization.dto;
 
 // MIGRATION NOTE: javax.validation.* will migrate to jakarta.validation.* in Spring Boot 3.x
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 /**
  * DTO for user login requests.

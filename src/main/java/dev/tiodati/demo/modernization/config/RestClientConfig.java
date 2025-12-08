@@ -1,16 +1,11 @@
 package dev.tiodati.demo.modernization.config;
 
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustAllStrategy;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
-
-import javax.net.ssl.SSLContext;
 
 /**
  * REST Client Configuration using Apache HttpClient 4.x.
@@ -41,25 +36,17 @@ public class RestClientConfig {
         // 1. Use default SSL validation (remove custom SSLContext)
         // 2. Load specific trusted certificates from a keystore
         // 3. Use proper certificate validation with custom trust managers
-        SSLContext sslContext = SSLContextBuilder
-                .create()
-                .loadTrustMaterial(new TrustAllStrategy())  // INSECURE - for demo only!
-                .build();
-        
-        // Create custom SSL socket factory
-        SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(sslContext);
-        
-        // Build HttpClient with custom SSL configuration and connection pooling
-        CloseableHttpClient httpClient = HttpClients.custom()
-                .setSSLSocketFactory(socketFactory)
-                .setMaxConnTotal(100)
-                .setMaxConnPerRoute(20)
-                .build();
+        // MIGRATION NOTE:
+        // For simplicity in this demo, we now use the default HttpClient 5 configuration.
+        // In a real migration, replace this with a properly configured CloseableHttpClient
+        // using connection pooling and SSL/TLS settings that meet your security requirements.
+        CloseableHttpClient httpClient = HttpClients.createDefault();
         
         // Create request factory with timeouts
         HttpComponentsClientHttpRequestFactory requestFactory = 
                 new HttpComponentsClientHttpRequestFactory(httpClient);
         requestFactory.setConnectTimeout(5000);
+        // Manual migration to `SocketConfig.Builder.setSoTimeout(Timeout)` necessary; see: https://docs.spring.io/spring-framework/docs/6.0.0/javadoc-api/org/springframework/http/client/HttpComponentsClientHttpRequestFactory.html#setReadTimeout(int)
         requestFactory.setReadTimeout(5000);
         
         return new RestTemplate(requestFactory);
