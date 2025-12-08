@@ -14,7 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 // MIGRATION NOTE: javax.validation.* will migrate to jakarta.validation.* in Spring Boot 3.x
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 /**
  * REST controller for task management operations.

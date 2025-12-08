@@ -166,8 +166,22 @@ For each integration test (for example, `TaskControllerIntegrationTest`, `Securi
 ### 5.3 Stabilize H2/Test Data
 
 - If data uniqueness or ordering issues arise (for example, duplicate key insert failures), ensure:
-  - `spring.jpa.hibernate.ddl-auto` and `spring.sql.init.mode` are correctly set for tests.
-  - `data.sql` is idempotent within the lifecycle of your tests (or use test-specific schemas).
+  - The test profile (`application-test.properties`) uses an in-memory H2 database (for example, `jdbc:h2:mem:testdb`).
+  - `spring.jpa.hibernate.ddl-auto` is set appropriately for tests (in this demo, `create-drop`).
+  - `spring.jpa.defer-datasource-initialization=true` and `spring.sql.init.mode=always` are set so that the JPA schema is created before `data.sql` runs and `data.sql` is always applied when the context starts.
+  - `data.sql` is both **idempotent** and **identity-aware** within the lifecycle of your tests. In this reference project we use:
+
+  ```sql path=null start=null
+  -- Idempotent H2 seeding
+  MERGE INTO users (id, username, email, password, roles, created_at) KEY(id) VALUES (...);
+  MERGE INTO tasks (id, title, description, status, priority, assigned_to_id, created_at, updated_at) KEY(id) VALUES (...);
+
+  -- Ensure identity sequences continue after seeded ids
+  ALTER TABLE users ALTER COLUMN id RESTART WITH 3;
+  ALTER TABLE tasks ALTER COLUMN id RESTART WITH 6;
+  ```
+
+  - Adjust the `RESTART WITH` values so that JPA-generated ids start at `max(seed_id) + 1` for your own data set.
 
 > **Deliverable:** All security- and auth-related integration tests pass under Java 17 + Spring Boot 3.
 
