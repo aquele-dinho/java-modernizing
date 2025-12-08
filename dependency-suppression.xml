@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<suppressions>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
     <!--
       Baseline suppression file for OWASP Dependency-Check.
       Add <suppress> entries here only for validated false positives.
       This file is referenced from pom.xml as dependency-suppression.xml.
+      Example entry (fill in real values when you validate a false positive):
+
+      <suppress>
+          <notes>Reason this finding is considered a false positive in this project.</notes>
+          <cve>CVE-0000-0000</cve>
+          <packageUrl>pkg:maven/group/artifact@version</packageUrl>
+      </suppress>
     -->
 </suppressions>

@@ -15,6 +15,13 @@ For **every step**, we describe:
 - Maven 3.8+.
 - This repository checked out and on the **Phase 0 baseline** state (no security plugins pre-configured).
 
+> Tooling versions validated with this guide:
+> - OWASP Dependency-Check Maven plugin: **12.1.9** (via `${dependency-check.maven.version}` in `pom.xml`).
+> - OpenRewrite Maven plugin: **6.24.0**.
+> - Recipe bundles resolved via `recipeArtifactCoordinates` using `LATEST`:
+>   `org.openrewrite.recipe:rewrite-migrate-java`, `org.openrewrite.recipe:rewrite-spring`, `org.openrewrite.recipe:rewrite-java-dependencies`.
+> If you change these versions, be prepared to adjust configuration according to the Troubleshooting section.
+
 ---
 
 ## Section 0 – Verify Baseline Application (Real-World Starting Point)
@@ -48,9 +55,42 @@ Goal: Confirm the project looks like a typical legacy app **before** adding any 
 Goal: Integrate OWASP Dependency-Check in `pom.xml` to establish a **security baseline** for third-party dependencies.
 
 ### Step 1.1 – Add dependency-check-maven plugin to pom.xml
-- **What you change:** Add a `<plugin>` entry for `org.owasp:dependency-check-maven` under `<build><plugins>`.
+- **What you change:** Add a `<plugin>` entry for `org.owasp:dependency-check-maven` under `<build><plugins>`, using a **known-good version**.
+- **Reference configuration (excerpt from `pom.xml`):**
+  ```xml
+  <properties>
+      ...
+      <dependency-check.maven.version>12.1.9</dependency-check.maven.version>
+  </properties>
+
+  <build>
+      <plugins>
+          <plugin>
+              <groupId>org.owasp</groupId>
+              <artifactId>dependency-check-maven</artifactId>
+              <version>${dependency-check.maven.version}</version>
+              <configuration>
+                  <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+                  <failBuildOnCVSS>7</failBuildOnCVSS>
+                  <suppressionFile>dependency-suppression.xml</suppressionFile>
+                  <formats>
+                      <format>HTML</format>
+                      <format>JSON</format>
+                  </formats>
+              </configuration>
+              <executions>
+                  <execution>
+                      <goals>
+                          <goal>check</goal>
+                      </goals>
+                  </execution>
+              </executions>
+          </plugin>
+      </plugins>
+  </build>
+  ```
 - **Expected result (code):**
-  - `pom.xml` contains a plugin block for OWASP Dependency-Check.
+  - `pom.xml` contains a plugin block for OWASP Dependency-Check using `${dependency-check.maven.version}`.
   - The plugin is configured to run the `check` goal.
 
 ### Step 1.2 – Configure NVD API key and basic options
@@ -80,7 +120,9 @@ Goal: Capture the **initial vulnerability posture** of the legacy stack.
 - **Command:**
   - `mvn dependency-check:check`
 - **Expected result:**
-  - Maven build completes and generates `dependency-check-report.html` and `dependency-check-report.json` under `target/`.
+  - Maven build completes **or fails due to detected vulnerabilities**, but in both cases the plugin successfully parses NVD data.
+  - On success, `dependency-check-report.html` and `dependency-check-report.json` are generated under `target/`.
+  - If the build fails during NVD update/parsing (before analysis completes), see Troubleshooting → OWASP Dependency-Check issues.
   - The guide instructs readers where to find these files and how to open the HTML report.
 
 ### Step 2.2 – Document baseline CVE count
@@ -91,9 +133,16 @@ Goal: Capture the **initial vulnerability posture** of the legacy stack.
 
 ### Step 2.3 – Create and document dependency-suppression.xml
 - **What you change:**
-  - Create `dependency-suppression.xml` with entries for known false positives.
+  - Create `dependency-suppression.xml` with entries for known false positives, using the official OWASP suppression schema.
+- **Reference skeleton (project root):**
+  ```xml
+  <?xml version="1.0" encoding="UTF-8"?>
+  <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+      <!-- Add <suppress> entries only for validated false positives -->
+  </suppressions>
+  ```
 - **Expected result (code):**
-  - The file exists at the project root and is referenced by the OWASP plugin.
+  - The file exists at the project root, validates against the OWASP schema, and is referenced by the OWASP plugin.
 - **Expected result (behavior):**
   - Re-running `mvn dependency-check:check` no longer flags suppressed vulnerabilities.
 
@@ -109,24 +158,41 @@ Goal: Capture the **initial vulnerability posture** of the legacy stack.
 
 Goal: Prepare automated code and configuration transformations.
 
-### Step 3.1 – Add rewrite-maven-plugin and recipe dependencies
+### Step 3.1 – Add rewrite-maven-plugin and recipe bundles
 - **What you change in `pom.xml`:**
   - Add `<plugin>` for `org.openrewrite.maven:rewrite-maven-plugin`.
-  - Under that plugin, add dependencies for:
-    - `rewrite-spring` (5.21.0+)
-    - `rewrite-migrate-java` (2.26.0+)
-    - `rewrite-java-dependencies`.
+  - Use the plugin’s `recipeArtifactCoordinates` mechanism (recommended by OpenRewrite) to pull in the Spring Boot and Java migration recipes.
+- **Reference configuration (excerpt from `pom.xml`):**
+  ```xml
+  <plugin>
+      <groupId>org.openrewrite.maven</groupId>
+      <artifactId>rewrite-maven-plugin</artifactId>
+      <version>6.24.0</version>
+      <configuration>
+          <activeRecipes>
+              <recipe>org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0</recipe>
+          </activeRecipes>
+          <!-- Let OpenRewrite resolve recipe bundles via coordinates to avoid classpath conflicts -->
+          <recipeArtifactCoordinates>
+              org.openrewrite.recipe:rewrite-migrate-java:LATEST,
+              org.openrewrite.recipe:rewrite-spring:LATEST,
+              org.openrewrite.recipe:rewrite-java-dependencies:LATEST
+          </recipeArtifactCoordinates>
+      </configuration>
+  </plugin>
+  ```
 - **Expected result (code):**
-  - `pom.xml` contains one OpenRewrite plugin with all required dependencies.
+  - `pom.xml` contains one OpenRewrite plugin with a stable, tested configuration.
 
-### Step 3.2 – Configure active recipes and security checks
+### Step 3.2 – Configure active recipes (structural migration only)
 - **What you configure:**
-  - `org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0` as an active recipe.
-  - `org.openrewrite.java.dependencies.DependencyVulnerabilityCheck` with `<maximumUpgradeDelta>PATCH</maximumUpgradeDelta>`.
+  - `org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0` as the **only required** active recipe.
 - **Expected result (code):**
-  - The plugin configuration clearly lists both migration and security recipes.
+  - The plugin configuration clearly lists the Spring Boot 3.0 structural migration recipe.
 - **Expected result (behavior):**
-  - When running OpenRewrite, it suggests safe patch upgrades for vulnerable dependencies.
+  - When running OpenRewrite, it proposes code and configuration changes for the Java 17 + Spring Boot 3.x migration.
+
+> **Note:** Dependency-vulnerability recipes (e.g., legacy `org.openrewrite.java.dependencies.DependencyVulnerabilityCheck`) are **optional** and version-dependent. This guide relies on OWASP Dependency-Check as the primary SCA tool; if your OpenRewrite bundle exposes additional dependency recipes, you may enable them, but do not treat them as required for this migration.
 
 ---
 
@@ -138,8 +204,9 @@ Goal: Preview migration changes before applying them to the codebase.
 - **Command:**
   - `mvn rewrite:dryRun -Drewrite.activeRecipes=org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0`
 - **Expected result:**
-  - Maven completes successfully.
+  - Maven completes successfully (even if OpenRewrite logs internal warnings about recipes you are not using).
   - A `rewrite.patch` file is generated under `target/rewrite/` (or similar path depending on plugin version).
+  - If the build fails with `NoSuchMethodError` or similar linkage errors in OpenRewrite internals, see Troubleshooting → OpenRewrite issues.
 
 ### Step 4.2 – Review rewrite.patch
 - **What you inspect:**
@@ -464,21 +531,25 @@ Recommended actions:
 Typical symptoms:
 - Build fails with connection errors to NVD.
 - Very long runtime on the first plugin execution.
+- JSON parsing errors mentioning CVSS v4.0 fields (e.g., unexpected enum values like `SAFETY` or `ModifiedCiaType`).
 
 Recommended actions:
 - Confirm that `NVD_API_KEY` is defined in the environment and that `pom.xml` references `${env.NVD_API_KEY}`.
 - Check network connectivity / proxy configuration.
 - If the local database is corrupted, clear the Dependency-Check cache and run again.
+- If NVD JSON parsing errors occur, update `<dependency-check.maven.version>` in `pom.xml` to a newer version that explicitly supports the latest NVD schema, then re-run `mvn dependency-check:check`.
 
-### 3. OpenRewrite recipes not applied
+### 3. OpenRewrite issues
 
 Typical symptoms:
-- `mvn rewrite:dryRun` runs, but `rewrite.patch` is empty or nearly empty.
+- `mvn rewrite:dryRun` or `mvn rewrite:run` fails with `NoSuchMethodError` mentioning `org.openrewrite.java.tree.JavaType$Method` or other OpenRewrite internals.
+- `rewrite:run` fails with `Recipe(s) not found` for dependency-vulnerability recipes.
+- `rewrite.patch` is empty or nearly empty.
 
 Recommended actions:
-- Check that `org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0` is listed in `<activeRecipes>` or passed via `-Drewrite.activeRecipes`.
-- Verify that recipe dependencies (`rewrite-spring`, `rewrite-migrate-java`, `rewrite-java-dependencies`) are present in the plugin.
-- Run `mvn -X rewrite:dryRun` to see more detailed logs.
+- Ensure `rewrite-maven-plugin` is set to the tested version shown in this guide (6.24.0) and `recipeArtifactCoordinates` are configured as in the reference snippet.
+- Limit `<activeRecipes>` to `org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0` for structural migration.
+- If linkage errors persist, temporarily skip automated migration for the affected area (for example, Spring Security) and apply the manual refactoring patterns from Section 6.
 
 ### 4. Security behavior changes
 
