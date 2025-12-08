@@ -4,10 +4,10 @@ package dev.tiodati.demo.modernization.domain;
 // - javax.persistence.* → jakarta.persistence.*
 // - javax.validation.* → jakarta.validation.*
 // OpenRewrite will automatically handle this namespace migration.
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import javax.persistence.*;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;

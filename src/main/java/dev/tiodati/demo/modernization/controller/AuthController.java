@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 // MIGRATION NOTE: javax.validation.* will migrate to jakarta.validation.* in Spring Boot 3.x
-import jakarta.validation.Valid;
+import javax.validation.Valid;
 
 /**
  * REST controller for authentication operations.

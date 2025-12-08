@@ -25,20 +25,16 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("Java Modernization Demo API")
                         .version("1.0.0-SNAPSHOT")
-                        .description("""
-                                REST API for Task Management System demonstrating Java 11 to 21 migration path.
-                                
-                                **Current Phase:** Phase 0 - Baseline (Java 11 + Spring Boot 2.4)
-                                
-                                **Features:**
-                                - JWT-based authentication
-                                - Role-based authorization (USER, ADMIN)
-                                - Task CRUD operations
-                                - User management
-                                
-                                **Default Credentials:**
-                                - Admin: `admin` / `password`
-                                - User: `user` / `password`""")
+                        .description("REST API for Task Management System demonstrating Java 11 to 21 migration path.\n\n" +
+                                "**Current Phase:** Phase 0 - Baseline (Java 11 + Spring Boot 2.4)\n\n" +
+                                "**Features:**\n" +
+                                "- JWT-based authentication\n" +
+                                "- Role-based authorization (USER, ADMIN)\n" +
+                                "- Task CRUD operations\n" +
+                                "- User management\n\n" +
+                                "**Default Credentials:**\n" +
+                                "- Admin: `admin` / `password`\n" +
+                                "- User: `user` / `password`")
                         .contact(new Contact()
                                 .name("Tiodati Demo")
                                 .email("dinho@tiodati.dev"))

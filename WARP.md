@@ -609,3 +609,12 @@ Potential additions for extended learning:
 **Author:** System Architect  
 **Status:** Enhanced with OWASP SCA Integration  
 **See Also:** `docs/OWASP.md` for detailed security methodology
+
+## 16. AI & Guide Execution Rules
+
+- When executing migration guides (Phase 1, Phase 1.1, Phase 2) on feature branches, **do not merge application code changes into `main` by default**.
+- Only the following are allowed to be merged directly into `main` from guide runs, unless explicitly requested otherwise:
+  - Documentation updates (e.g., `docs/GUIDE_PHASE*.md`, `docs/OWASP.md`, `docs/*ISSUES.md`).
+  - Baseline configuration/data fixes that are valid for the Phase 0 baseline (e.g., `data.sql` idempotent seeding, clearly non-breaking test/data initialisation fixes).
+- All platform, framework, or security **code changes** (Spring Boot upgrades, Java version changes, SecurityConfig/JWT/RestClient refactors, etc.) must remain on feature branches and be merged to `main` only after explicit user confirmation for that phase.
+- When in doubt, treat code changes as **feature-branch only** and ask before merging anything beyond docs and clear baseline fixes.
