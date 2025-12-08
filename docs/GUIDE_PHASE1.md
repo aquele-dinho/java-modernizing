@@ -15,6 +15,8 @@ For **every step**, we describe:
 - Maven 3.8+.
 - This repository checked out and on the **Phase 0 baseline** state (no security plugins pre-configured).
 
+> **Recommended workflow:** Create a dedicated branch (for example, `feature/phase1-migration`) before starting. Run all steps of this guide on that branch and merge back into `main` only after you have reviewed and accepted the changes.
+
 > Tooling versions validated with this guide:
 > - OWASP Dependency-Check Maven plugin: **12.1.9** (via `${dependency-check.maven.version}` in `pom.xml`).
 > - OpenRewrite Maven plugin: **6.24.0**.
@@ -259,24 +261,43 @@ Goal: Apply the OpenRewrite recipes and persist the transformed code.
 
 Goal: Fix remaining incompatibilities and adjust to new defaults.
 
+After running OpenRewrite, the project will compile **only after** a few targeted manual fixes. This section describes the concrete target state.
+
 ### Step 6.1 – Update RestClientConfig for HttpClient 5.x
+- **What you do:**
+  - Replace HttpClient 4.x classes with HttpClient 5.x equivalents.
+  - For the purposes of this demo, it is acceptable to use the default HttpClient 5 configuration:
+    - Use `CloseableHttpClient httpClient = HttpClients.createDefault();`.
+    - Keep using `HttpComponentsClientHttpRequestFactory` with connect/read timeouts.
 - **Expected code changes:**
-  - Rest client configuration uses HttpClient 5.x APIs.
-  - Any deprecated or removed classes from 4.x are replaced.
+  - `RestClientConfig` imports `org.apache.hc.client5.http.impl.classic.*` instead of `org.apache.http.*`.
+  - The final code compiles without using removed 4.x methods such as `setSSLSocketFactory`, `setMaxConnTotal`, or `setMaxConnPerRoute` on the 5.x builder.
 
 ### Step 6.2 – Fix Spring Security Lambda DSL issues
+- **What you do:**
+  - Remove `WebSecurityConfigurerAdapter` and migrate to the Spring Security 6 pattern:
+    - Define a `SecurityFilterChain` bean that configures CORS, CSRF, session policy, and authorization rules.
+    - Define an `AuthenticationManager` bean via `AuthenticationConfiguration`.
+    - Optionally define a `DaoAuthenticationProvider` wired to your `UserDetailsService` and `PasswordEncoder`.
 - **Expected code changes:**
-  - Security configuration uses `http.authorizeHttpRequests`, `http.securityMatcher`, etc.
-  - All endpoints have equivalent authorization rules compared to the legacy version.
+  - `SecurityConfig` no longer extends `WebSecurityConfigurerAdapter`.
+  - A `SecurityFilterChain` bean is present and uses `authorizeHttpRequests` + `requestMatchers` with the Lambda DSL.
+  - JWT filter is still added via `http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)`.
 
 ### Step 6.3 – Update deprecated configuration properties
+- **What you do:**
+  - Ensure database initialization and H2 console behavior match Spring Boot 3.x expectations.
 - **Expected code changes:**
-  - Deprecated server/security properties updated to their Spring Boot 3.x equivalents.
+  - `application.properties` uses `spring.sql.init.mode` instead of `spring.datasource.initialization-mode`.
+  - `spring.jpa.defer-datasource-initialization=true` is set so that the JPA schema is created before `data.sql` runs.
 
 ### Step 6.4 – Update tests for new defaults
-- **Expected behavior:**
-  - All tests compile and pass.
-  - Any changed defaults (e.g., CSRF behavior, password encoder) are reflected in test assertions.
+- **What you do:**
+  - Update any test annotations and expectations that depend on pre–Spring Boot 3 behavior.
+- **Expected behavior (Phase 1 scope):**
+  - The project compiles successfully.
+  - All **unit tests** pass.
+  - Integration tests may reveal additional issues (for example, JWT library incompatibilities and stricter security rules). These are addressed in subsequent phases; use their failures as guidance for Phase 1.x/2 work rather than as a sign that the structural migration failed.
 
 ---
 
@@ -307,19 +328,23 @@ Goal: Ensure migration **did not worsen** the security posture.
 
 Goal: Validate functional behavior, tests, and performance after migration.
 
-### Step 8.1 – Run full build and tests
+### Step 8.1 – Run full build and unit tests
 - **Command:**
   - `mvn clean verify`
-- **Expected result:**
-  - Build completes successfully.
-  - All unit and integration tests pass.
+- **Expected result (minimum for Phase 1):**
+  - Project compiles successfully.
+  - All **unit tests** pass.
+- **Note:** It is common for **integration tests** to fail at this stage due to:
+  - Legacy JWT libraries that are not compatible with Java 17.
+  - Changes in Spring Security 6 defaults (stricter authorization or error handling).
+  Treat these failures as input to follow-up phases (for example, upgrading JJWT and adjusting security tests), not as evidence that the structural migration was incorrect.
 
 ### Step 8.2 – Run application and validate endpoints
 - **Command:**
   - `mvn spring-boot:run`
 - **Expected result:**
   - Application starts without errors on the configured port.
-  - All authentication and task management endpoints behave as before (or better).
+  - Core authentication and task management flows are reachable; where flows fail due to JWT parsing or authorization, capture those behaviors as work items for the next phase.
 
 ### Step 8.3 – Compare performance metrics
 - **What you record:**
@@ -558,6 +583,56 @@ Typical symptoms:
 
 Recommended actions:
 - Compare endpoint mappings before/after (especially `antMatchers` vs `requestMatchers`).
-- Add security integration tests for critical endpoints (login, registration, admin operations).
+- Add or update security integration tests for critical endpoints (login, registration, admin operations) to reflect Spring Security 6 defaults.
+
+### 5. H2 schema / `data.sql` issues
+
+Typical symptoms:
+- ApplicationContext fails to start with H2 errors like `Table "USERS" not found` when executing `data.sql`.
+
+Recommended actions:
+- Ensure `spring.jpa.hibernate.ddl-auto` is set (for example, `create-drop` in this demo).
+- Add `spring.jpa.defer-datasource-initialization=true` so that the JPA schema is created before `data.sql` is applied.
+
+### 6. JWT / DatatypeConverter issues
+
+Typical symptoms:
+- Test or runtime failures with `ClassNotFoundException: javax.xml.bind.DatatypeConverter` originating from JWT parsing (e.g., JJWT 0.9.x).
+
+Recommended actions:
+- Recognize this as a Java 17 + legacy JJWT incompatibility. The fix requires upgrading to a Jakarta/Java 17–compatible JJWT version and updating token parsing/creation code.
+- Treat this as a follow-up phase beyond the core structural migration; do not attempt to patch it ad hoc during the initial Spring Boot 3 upgrade. Instead, record it as a work item for the next iteration.
 
 Use this section as a checklist when validating the result of each execution (`dependency-check:check`, `rewrite:dryRun`, `rewrite:run`, `clean verify`).
+
+---
+
+## Next Steps – Phase 1.1 vs Phase 2
+
+After completing Phase 1, there are two possible paths forward:
+
+1. **Phase 1.1 – JWT & Security Alignment (Recommended in most cases)**  
+   See `docs/GUIDE_PHASE1_1_JWT_SECURITY.md`.
+
+   **When Phase 1.1 is effectively mandatory:**
+   - You intend to use this application as a realistic demo or production-like system.
+   - Integration tests around authentication and authorization are failing (for example, due to JJWT/Java 17 incompatibilities or stricter Spring Security 6 rules).
+   - You want test results and runtime behavior to accurately reflect the intended security model before changing the Java runtime again.
+
+   In these scenarios, you should complete Phase 1.1 **before** moving on to Phase 2. It ensures that:
+   - JWT creation and parsing work correctly on Java 17.
+   - Spring Security behavior matches your expectations.
+   - All unit and integration tests pass on the Java 17 + Spring Boot 3 baseline.
+
+2. **Phase 2 – Java 17→21 & Optimizations (Optional to start immediately)**  
+   See `docs/GUIDE_PHASE2.md`.
+
+   **When you may defer Phase 1.1 and go directly to Phase 2:**
+   - You are primarily interested in exploring Java 21, Virtual Threads, and performance characteristics.
+   - You accept that the authentication layer and some integration tests may remain partially broken during experimentation.
+
+   In this case, treat Phase 1.1 as a **tracked follow-up**: you can proceed to Phase 2 on top of the Phase 1 code, but you should plan to return to the JWT & security alignment work before considering the modernization "finished" from a security perspective.
+
+> **Summary:**
+> - For any serious or production-adjacent scenario: **Phase 1.1 is effectively required** before Phase 2.
+> - For exploratory/educational experiments with Java 21 and Virtual Threads: you may run Phase 2 directly after Phase 1, with Phase 1.1 recorded as a future task.
