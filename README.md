@@ -26,7 +26,7 @@ Phase 0 is a **Task Management REST API** that intentionally represents a typica
 - **Database:** H2 in-memory database with sample data
 
 If you need detailed endpoint examples, test behavior, or project layout, see:
-- `docs/BASELINE_APP_REFERENCE.md`
+- [`docs/BASELINE_APP_REFERENCE.md`](docs/BASELINE_APP_REFERENCE.md)
 
 ## 🧭 Using the Modernization Guides
 
@@ -35,11 +35,11 @@ The **main goal** of this repository is to serve as a playground for the step-by
 Recommended reading/execution order:
 
 1. **Security & SCA workflow**  
-   - `docs/GUIDE_SECURITY.md` – how to configure OWASP Dependency-Check, NVD API key, suppression management, and security gates.
+   - [`docs/GUIDE_SECURITY.md`](docs/GUIDE_SECURITY.md) – how to configure OWASP Dependency-Check, NVD API key, suppression management, and security gates.
 2. **Phase 1 – Java 11 → 17 & Spring Boot 2.4 → 3.0**  
-   - `docs/GUIDE_PHASE1.md` – run OpenRewrite, migrate `javax.*` → `jakarta.*`, upgrade Spring Security, and apply security checks.  
+   - [`docs/GUIDE_PHASE1.md`](docs/GUIDE_PHASE1.md) – run OpenRewrite, migrate `javax.*` → `jakarta.*`, upgrade Spring Security, and apply security checks.  
 3. **Phase 2 – Java 17 → 21 & optimizations**  
-   - `docs/GUIDE_PHASE2.md` – migrate to Java 21, enable Virtual Threads, and validate performance and security.
+   - [`docs/GUIDE_PHASE2.md`](docs/GUIDE_PHASE2.md) – migrate to Java 21, enable Virtual Threads, and validate performance and security.
 
 > 🇧🇷 Brazilian Portuguese versions of the guides are also available alongside the English files (same names with language suffix).
 
@@ -131,7 +131,7 @@ The baseline is a simple Task Management API with JWT-based security.
 
 - For **interactive exploration**, use Swagger UI at `http://localhost:8080/swagger-ui.html`.
 - For **detailed cURL examples** of authentication, task, and user endpoints, see:
-  - `docs/BASELINE_APP_REFERENCE.md`
+-  - [`docs/BASELINE_APP_REFERENCE.md`](docs/BASELINE_APP_REFERENCE.md)
 
 ## 🧪 Running Tests (Baseline)
 
@@ -144,7 +144,7 @@ mvn test          # run tests
 mvn clean verify  # full verification build
 ```
 
-For a breakdown of which tests exist and what they cover, see `docs/BASELINE_APP_REFERENCE.md`.
+For a breakdown of which tests exist and what they cover, see [`docs/BASELINE_APP_REFERENCE.md`](docs/BASELINE_APP_REFERENCE.md).
 
 ## 🔒 Security & OWASP SCA
 
@@ -158,21 +158,21 @@ To learn how to:
 - Run gated security checks
 - Manage suppression files and generate SBOM/VDR/VEX
 
-refer to **`docs/GUIDE_SECURITY.md`** and `docs/OWASP.md`.
+refer to **[`docs/GUIDE_SECURITY.md`](docs/GUIDE_SECURITY.md)** and [`docs/OWASP.md`](docs/OWASP.md).
 
 ## 🔄 Migration Path (High-Level)
 
 The modernization journey is intentionally **guide-driven**:
 
-- **Phase 0:** Establish and understand the legacy baseline (this README + `docs/BASELINE_APP_REFERENCE.md`).
-- **Phase 1:** Follow `docs/GUIDE_PHASE1.md` to migrate to Java 17 + Spring Boot 3.0 using OpenRewrite and gated security checks.
-- **Phase 2:** Follow `docs/GUIDE_PHASE2.md` to move to Java 21, enable Virtual Threads, and perform final security/performance validation.
+- **Phase 0:** Establish and understand the legacy baseline (this README + [`docs/BASELINE_APP_REFERENCE.md`](docs/BASELINE_APP_REFERENCE.md)).
+- **Phase 1:** Follow [`docs/GUIDE_PHASE1.md`](docs/GUIDE_PHASE1.md) to migrate to Java 17 + Spring Boot 3.0 using OpenRewrite and gated security checks.
+- **Phase 2:** Follow [`docs/GUIDE_PHASE2.md`](docs/GUIDE_PHASE2.md) to move to Java 21, enable Virtual Threads, and perform final security/performance validation.
 
 The guides contain the precise commands and OpenRewrite recipes; this README only summarizes the path.
 
 ## 📦 Project Structure (High-Level)
 
-For a detailed, baseline-focused view of the project layout, use `docs/BASELINE_APP_REFERENCE.md`.
+For a detailed, baseline-focused view of the project layout, use [`docs/BASELINE_APP_REFERENCE.md`](docs/BASELINE_APP_REFERENCE.md).
 
 At a high level:
 
@@ -200,9 +200,9 @@ These patterns are marked with `MIGRATION NOTE` comments throughout the code. Th
 
 ## 📚 Additional Resources
 
-- **Migration Research:** See `docs/RESEARCH.md` for comprehensive analysis
-- **OWASP SCA Strategy:** See `docs/OWASP.md` for security methodology
-- **Technical Spec:** See `WARP.md` for detailed specifications
+- **Migration Research:** See [`docs/RESEARCH.md`](docs/RESEARCH.md) for comprehensive analysis
+- **OWASP SCA Strategy:** See [`docs/OWASP.md`](docs/OWASP.md) for security methodology
+- **Technical Spec:** See [`WARP.md`](WARP.md) for detailed specifications
 - **OpenRewrite Docs:** https://docs.openrewrite.org
 - **OWASP Dependency-Check:** https://owasp.org/www-project-dependency-check/
 - **OWASP Dep-Scan:** https://owasp.org/www-project-dep-scan/
